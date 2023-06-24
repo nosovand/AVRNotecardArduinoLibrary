@@ -437,6 +437,11 @@ void AVRNotecardCheckForUpdate(){
 }
 
 int AVRNotecardSendAlarmNotification(const __FlashStringHelper* alarmType){
+  /**
+    * @brief: sends alarm notification to notecard
+    * @param alarmType: type of alarm
+    * @return: 0 if success, -1 if error
+  */
   J* req = AVRNoteNewRequest(F("note.add"));
   if(req == NULL){
     return RETURN_ERROR;
