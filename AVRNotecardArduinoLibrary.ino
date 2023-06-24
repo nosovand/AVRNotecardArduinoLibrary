@@ -12,7 +12,7 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(F("############## DEFAULT SOFTWARE VERSION #############"));
+  Serial.println(F("############## SOFTWARE VERSION 0.0.1 #############"));
   SHOW_SIZES
   // check for update
   AVRNotecardCheckForUpdate();
