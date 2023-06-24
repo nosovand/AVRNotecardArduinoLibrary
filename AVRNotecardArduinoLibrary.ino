@@ -12,9 +12,20 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(F("############## SOFTWARE VERSION 0.0.2 #############"));
+  Serial.println(F("############## SOFTWARE VERSION 0.0.1 #############"));
+  Serial.println(F("############# feature/alarmNotification ############"));
   SHOW_SIZES
   // check for update
-  AVRNotecardCheckForUpdate();
+  //AVRNotecardCheckForUpdate();
+  // check serial input
+  // if serial input is a/b, send alarm notification
+  if (Serial.available() > 0) {
+    char input = Serial.read();
+    if (input == 'a') {
+      AVRNotecardSendAlarmNotification(ALARM_A);
+    } else if (input == 'b') {
+      AVRNotecardSendAlarmNotification(ALARM_B);
+    }
+  }
   delay(15000);
 }
