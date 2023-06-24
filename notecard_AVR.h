@@ -24,6 +24,8 @@ int AVRReturnNotecardFromDFU();
 unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize);
 void AVRNotecardCheckForUpdate();
 
+int AVRNotecardSendAlarmNotification(const __FlashStringHelper* alarmType);
+
 J* AVRNoteNewRequest(const __FlashStringHelper* request);
 N_CJSON_PUBLIC(J*) AVRJAddStringToObject(J* const object, const char* const name, const __FlashStringHelper* string);
 

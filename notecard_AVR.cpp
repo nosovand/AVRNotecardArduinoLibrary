@@ -1,5 +1,3 @@
-//#include "note-c/note.h"
-//#include "note-c/n_cjson.h"
 #include "Arduino.h"
 #include "notecard_AVR.h"
 #include "myBase64.h"
@@ -438,5 +436,22 @@ void AVRNotecardCheckForUpdate(){
   InternalStorage.apply(); // this doesn't return
 }
 
-
+int AVRNotecardSendAlarmNotification(const __FlashStringHelper* alarmType){
+  J* req = AVRNoteNewRequest(F("note.add"));
+  if(req == NULL){
+    return RETURN_ERROR;
+  }
+  AVRJAddStringToObject(req, "file", F("alarm.qo"));
+  JAddBoolToObject(req, "sync", true);
+  J* body = JCreateObject();
+  if(body == NULL){
+    return RETURN_ERROR;
+  }
+  AVRJAddStringToObject(body, "alarmType", alarmType);
+  JAddItemToObject(req, "body", body);
+  if(!notecard.sendRequest(req)){
+    return RETURN_ERROR;
+  }
+  RETURN_SUCCESS;
+}
 
