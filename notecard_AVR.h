@@ -11,7 +11,7 @@
 #define ALARM_B F("Alarm B")
 
 
-
+extern Notecard notecard; //test
 
 
 int AVRNotecardInit(bool debugMode);

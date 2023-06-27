@@ -10,6 +10,17 @@ Notecard notecard;
 
 bool noteCardIsSyncing = false;
 
+int AVRInitNotecardGPS(){
+  J *req = NoteNewRequest("card.location.mode");
+  if (req==NULL){
+    return RETURN_ERROR;
+  }
+  AVRJAddStringToObject(req, "mode", F("periodic"));
+  JAddNumberToObject(req, "seconds", 600);
+  notecard.sendRequest(req);
+  return RETURN_SUCCESS;
+}
+
 void moveStringToRAM(const char* source, char** destination) {
   /**
    * @brief move a string from flash memory to RAM
@@ -127,6 +138,9 @@ int AVRNotecardInit(bool debugMode){
     // }
     if(!AVRStartNotecardSync()){
       return RETURN_ERROR;
+    }
+    if(!AVRInitNotecardGPS()){
+      usbSerial.println(F("Not enough memory for gps init"));
     }
     return RETURN_SUCCESS;
 }
