@@ -17,7 +17,7 @@
 int AVRNotecardInit(bool debugMode);
 int AVRStartNotecardSync();
 int AVRIsNotecardConnected();
-int AVRCheckNotecatdDFUMode(int maxUpdateSize);
+int AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5);
 int AVRSetNotecardToDFU(int maxWaitTime_sec);
 int AVRReturnNotecardFromDFU();
 
