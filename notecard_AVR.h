@@ -11,10 +11,13 @@
 #define ALARM_B F("Alarm B")
 
 
+extern Notecard notecard; //test
 
+#define GPS_CONNECTION_PERIOD_SEC 60
 
 
 int AVRNotecardInit(bool debugMode);
+int AVRInitNotecardGPS();
 int AVRStartNotecardSync();
 int AVRIsNotecardConnected();
 int AVRCheckNotecatdDFUMode(int maxUpdateSize);
