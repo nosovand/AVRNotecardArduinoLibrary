@@ -15,8 +15,6 @@ void loop() {
   Serial.println(F("############## SOFTWARE VERSION 0.0.1 #############"));
   SHOW_SIZES
   // check for update
-  //AVRNotecardCheckForUpdate();
-  J *req = AVRNoteNewRequest(F("card.location"));
-  notecard.sendRequest(req);
+  AVRNotecardCheckForUpdate();
   delay(15000);
 }
