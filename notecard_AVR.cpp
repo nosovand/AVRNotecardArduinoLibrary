@@ -92,6 +92,32 @@ N_CJSON_PUBLIC(J*) AVRJAddStringToObject(J* const object, const char* const name
   return result;
 }
 
+N_CJSON_PUBLIC(void) AVRJDeleteWithoutPayload(J *item)
+{
+  /**
+   * @brief delete a JSON object without deleting the payload
+   * @param item the JSON object
+   * @return void
+  */
+    J *next = NULL;
+    while (item != NULL) {
+        next = item->next;
+        if (!(item->type & JIsReference) && (item->child != NULL)) {
+            AVRJDeleteWithoutPayload(item->child);
+        }
+        if (!(item->type & JIsReference) && (item->valuestring != NULL)) {
+          if(strstr(item->string, "payload") == NULL){
+            NoteFree(item->valuestring);
+          }
+        }
+        if (!(item->type & JStringIsConst) && (item->string != NULL)) {
+              NoteFree(item->string);
+        }
+        NoteFree(item);
+        item = next;
+    }
+}
+
 int AVRNotecardInit(bool debugMode){
     /**
      * @brief initialize the notecard
@@ -271,7 +297,7 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
   return RETURN_SUCCESS;
 }
 
-unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize) {
+char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize) {
     /**
      * @brief retrieve a chunk of downloaded update from the notecard
      * @param numOfErrors the current number of errors that occured during the download
@@ -283,24 +309,30 @@ unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, in
     //static unsigned char payload[64]; // assuming a fixed size of 512 for payload
     //dynamic allocation of payload
     //check if enough memory is available
-    unsigned char* payload = new unsigned char[chunkSize];
-
+    
+    //unsigned char* payload = new unsigned char[chunkSize];
+    
     bool payloadEmpty = true;
+    char* payload = NULL;
 
     for (int retry = 0; retry < max_retries; retry++) {
+        
         //if its not first try, half the size of the allocated payload
         if (retry > 0) {
             chunkSize = chunkSize / 2;
-            delete[] payload;
-            payload = new unsigned char[chunkSize];
+            
+            // delete[] payload;
+            // 
+            // payload = new unsigned char[chunkSize];
+            // 
         }
         //if this is the last try, set the chunk size to 1
         //or if there was not enough memory to allocate the payload
         //this is to ensure that we get the last chunk of data
-        if ((retry == max_retries - 1 || payload == NULL) && chunkSize > 1) {
+        if ((retry == max_retries - 1) && chunkSize > 1) {
             chunkSize = 1;
-            delete[] payload;
-            payload = new unsigned char[chunkSize];
+            // delete[] payload;
+            // payload = new unsigned char[chunkSize];
         }
         usbSerial.print(F("dfy: reading chunk (offset: "));
         usbSerial.print(offset);
@@ -309,21 +341,23 @@ unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, in
         usbSerial.print(F(" try: "));
         usbSerial.println(retry + 1);
         // Request the next chunk from the notecard
+        
         J* req = AVRNoteNewRequest(F("dfu.get"));
         if (req == NULL) {
             usbSerial.println(F("dfu: insufficient memory\n"));
-            delete[] payload;
+            //delete[] payload;
             return NULL;
         }
         JAddNumberToObject(req, "length", chunkSize);
         JAddNumberToObject(req, "offset", offset);
-
+        
         // Requesting current chunk of data
         J* rsp = notecard.requestAndResponse(req);
+        
         if (rsp == NULL) {
             usbSerial.println(F("dfu: insufficient memory\n"));
             notecard.deleteResponse(rsp);
-            delete[] payload;
+            //delete[] payload;
             return NULL;
         } else if (notecard.responseError(rsp)) {
             //with heighest probability means that we are requesting data that are out of update size
@@ -334,19 +368,22 @@ unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, in
             numOfErrors++;
             continue;
         } else {
-
-            char* payloadB64 = JGetString(rsp, "payload");
-            if (payloadB64[0] == '\0') {
+            
+            payload = JGetString(rsp, "payload");
+            if (payload[0] == '\0') {
                 usbSerial.println(F("dfu: no payload"));
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 break;
             }
-
-            int num_bytes = UnBase64((unsigned char*)payload, (const unsigned char*)payloadB64, strlen(payloadB64));
+            
+            //int num_bytes = UnBase64((unsigned char*)payload, (const unsigned char*)payload, strlen(payload));
+            int num_bytes = AVRUnBase64((char*)payload);
+            
             const char *expectedMD5 = JGetString(rsp, "status");
             char chunkMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
             NoteMD5HashString((uint8_t *)payload, num_bytes, chunkMD5, sizeof(chunkMD5));
+            
             if (num_bytes < 0) {
                 usbSerial.println(F("dfu: can't decode payload\n"));
                 notecard.deleteResponse(rsp);
@@ -365,14 +402,15 @@ unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, in
             } else {
                 usbSerial.println(F("dfu: payload decoded"));
                 payloadEmpty = false;
-                notecard.deleteResponse(rsp);
+                //notecard.deleteResponse(rsp);
+                AVRJDeleteWithoutPayload(rsp);
                 break;
             }
         }
     }
 
     if (payloadEmpty) {
-        delete[] payload;
+       // delete[] payload;
         return NULL;
     } else {
         return payload;
@@ -462,9 +500,9 @@ void AVRNotecardCheckForUpdate(){
   } 
 
   bool payloadEmpty = false;
-  int chunkSize = 2048;
+  int chunkSize = 256;
   long offset = 0;
-  unsigned char* payload;
+  char* payload;
   int maxNumOfErrors = 10;
   int numOfErrors = 0;
   NoteMD5Context md5Context;
@@ -473,11 +511,14 @@ void AVRNotecardCheckForUpdate(){
   //receive update chunk by chunk and save it to flash memory
   for (offset; offset < updateSize; offset+=chunkSize)
   {  
+    
     if(maxNumOfErrors < numOfErrors)
         break;
 
     //retrieve decoded payload chunk with given offset
+    
     payload = AVRRetrieveNotecardPayloadChunk(numOfErrors, offset, chunkSize);
+    
     if (payload == NULL) {
         AVRReturnNotecardFromDFU();
         return;

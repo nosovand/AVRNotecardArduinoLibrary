@@ -21,7 +21,7 @@ int AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5);
 int AVRSetNotecardToDFU(int maxWaitTime_sec);
 int AVRReturnNotecardFromDFU();
 
-unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize);
+char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize);
 void AVRNotecardCheckForUpdate();
 
 J* AVRNoteNewRequest(const __FlashStringHelper* request);
