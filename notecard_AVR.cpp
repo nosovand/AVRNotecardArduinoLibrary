@@ -107,6 +107,32 @@ N_CJSON_PUBLIC(J*) AVRJAddStringToObject(J* const object, const char* const name
   return result;
 }
 
+N_CJSON_PUBLIC(void) AVRJDeleteWithoutPayload(J *item)
+{
+  /**
+   * @brief delete a JSON object without deleting the payload
+   * @param item the JSON object
+   * @return void
+  */
+    J *next = NULL;
+    while (item != NULL) {
+        next = item->next;
+        if (!(item->type & JIsReference) && (item->child != NULL)) {
+            AVRJDeleteWithoutPayload(item->child);
+        }
+        if (!(item->type & JIsReference) && (item->valuestring != NULL)) {
+          if(strstr(item->string, "payload") == NULL){
+            NoteFree(item->valuestring);
+          }
+        }
+        if (!(item->type & JStringIsConst) && (item->string != NULL)) {
+              NoteFree(item->string);
+        }
+        NoteFree(item);
+        item = next;
+    }
+}
+
 int AVRNotecardInit(bool debugMode){
     /**
      * @brief initialize the notecard
@@ -140,6 +166,9 @@ int AVRNotecardInit(bool debugMode){
     // else{
     //   return RETURN_ERROR;
     // }
+
+    //TODO: Notify notecard of out current software verion
+
     if(!AVRStartNotecardSync()){
       return RETURN_ERROR;
     }
@@ -196,16 +225,14 @@ int AVRStartNotecardSync(){
   return RETURN_SUCCESS;
 }
 
-int AVRCheckNotecatdDFUMode(int maxUpdateSize) {
+int AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
   /**
    * Checks the notecard DFU mode and returns the size of the update if one is available
    * @brief check the notecard DFU mode
-   * @param maxUpdateSize the maximum size of the update
+   * @param maxUpdateSize the maximum size of the 
+   * @param imageMD5 pointer to the array to store the MD5 hash
    * @return available update size if mode is ready, 0 if error or no update available
   */
-  // variables to store the response from dfu.status
-  char mode[20];
-  char status[40];
   long updateSize = 0;
   // set dfu.status to on to allow the notecard to download new firmware
   J* req = AVRNoteNewRequest(F("dfu.status"));
@@ -213,18 +240,15 @@ int AVRCheckNotecatdDFUMode(int maxUpdateSize) {
     JAddBoolToObject(req, "on", true);
     J* rsp = notecard.requestAndResponse(req);
     if (rsp != NULL) {
-      // get the mode and status from the response
-      char* tempMode = JGetString(rsp, "mode");
-      strlcpy(mode, tempMode, sizeof(mode));
-      char* tempStatus = JGetString(rsp, "status");
-      strlcpy(status, tempStatus, sizeof(status));
-      //if mode is ready, retrieve update size
-      if (strcmp(mode, "ready") == 0) {
+      //check if mode is ready
+      if (strcmp(JGetString(rsp, "mode"), "ready") == 0) {
+        //TODO: check if the update software version is the same as current software verion
         J* body = JGetObject(rsp, "body");
         updateSize = JGetInt(body, "length");
         if (updateSize == 0) {
           updateSize = maxUpdateSize;
         }
+        strlcpy(imageMD5, JGetString(body, "md5"), NOTE_MD5_HASH_STRING_SIZE);
       }
       notecard.deleteResponse(rsp);
     }
@@ -291,7 +315,7 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
   return RETURN_SUCCESS;
 }
 
-unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize) {
+char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize) {
     /**
      * @brief retrieve a chunk of downloaded update from the notecard
      * @param numOfErrors the current number of errors that occured during the download
@@ -300,72 +324,65 @@ unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, in
      * @return unsigned char* the chunk of data
     */
     int8_t max_retries = 5;
-    //static unsigned char payload[64]; // assuming a fixed size of 512 for payload
-    //dynamic allocation of payload
-    //check if enough memory is available
-    unsigned char* payload = new unsigned char[chunkSize];
-
     bool payloadEmpty = true;
+    char* payload = NULL;
 
     for (int retry = 0; retry < max_retries; retry++) {
+        
         //if its not first try, half the size of the allocated payload
         if (retry > 0) {
             chunkSize = chunkSize / 2;
-            delete[] payload;
-            payload = new unsigned char[chunkSize];
         }
         //if this is the last try, set the chunk size to 1
         //or if there was not enough memory to allocate the payload
+        //or if for some reason chunksize is of incorrect value
         //this is to ensure that we get the last chunk of data
-        if ((retry == max_retries - 1 || payload == NULL) && chunkSize > 1) {
+        if (((retry == max_retries - 1) && chunkSize > 1) || chunkSize < 1) {
             chunkSize = 1;
-            delete[] payload;
-            payload = new unsigned char[chunkSize];
         }
-
         usbSerial.print(F("dfy: reading chunk (offset: "));
         usbSerial.print(offset);
         usbSerial.print(F(" length: "));
         usbSerial.print(chunkSize);
         usbSerial.print(F(" try: "));
         usbSerial.println(retry + 1);
-        
         // Request the next chunk from the notecard
         J* req = AVRNoteNewRequest(F("dfu.get"));
         if (req == NULL) {
             usbSerial.println(F("dfu: insufficient memory\n"));
-            delete[] payload;
             return NULL;
         }
         JAddNumberToObject(req, "length", chunkSize);
         JAddNumberToObject(req, "offset", offset);
-
+        
         // Requesting current chunk of data
         J* rsp = notecard.requestAndResponse(req);
-        
         if (rsp == NULL) {
             usbSerial.println(F("dfu: insufficient memory\n"));
             notecard.deleteResponse(rsp);
-            delete[] payload;
             return NULL;
         } else if (notecard.responseError(rsp)) {
+            //with heighest probability means that we are requesting data that are out of update size
+            //the chunk size will be smaller for the next retry
             usbSerial.print(F("dfu: error on read: "));
             usbSerial.println(JGetString(rsp, "err"));
             notecard.deleteResponse(rsp);
             numOfErrors++;
             continue;
         } else {
-            char* payloadB64 = JGetString(rsp, "payload");
-            
-            if (payloadB64[0] == '\0') {
+            payload = JGetString(rsp, "payload");
+            if (payload[0] == '\0') {
                 usbSerial.println(F("dfu: no payload"));
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 break;
             }
-
-            int num_bytes = UnBase64((unsigned char*)payload, (const unsigned char*)payloadB64, strlen(payloadB64));
-
+            int num_bytes = AVRUnBase64((char*)payload);
+            
+            const char *expectedMD5 = JGetString(rsp, "status");
+            char chunkMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
+            NoteMD5HashString((uint8_t *)payload, num_bytes, chunkMD5, sizeof(chunkMD5));
+            
             if (num_bytes < 0) {
                 usbSerial.println(F("dfu: can't decode payload\n"));
                 notecard.deleteResponse(rsp);
@@ -376,17 +393,22 @@ unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, in
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 continue;
+            } else if (strcmp(chunkMD5, expectedMD5)!=0){
+                usbSerial.println(F("dfu: MD5 mismatch\n"));
+                notecard.deleteResponse(rsp);
+                payloadEmpty = true;
+                continue;
             } else {
                 usbSerial.println(F("dfu: payload decoded"));
                 payloadEmpty = false;
-                notecard.deleteResponse(rsp);
+                //notecard.deleteResponse(rsp);
+                AVRJDeleteWithoutPayload(rsp);
                 break;
             }
         }
     }
 
     if (payloadEmpty) {
-        delete[] payload;
         return NULL;
     } else {
         return payload;
@@ -431,10 +453,11 @@ void AVRNotecardCheckForUpdate(){
   usbSerial.println(F("Starting notecard sync"));
   Serial.flush();
   int maxWaitTime_sec = 120;
+  int waitPeriod_sec = 20;
   AVRStartNotecardSync();
   
-  for(int i = 0; i < maxWaitTime_sec; i+=1){
-    delay(1000);
+  for(int i = 0; i < maxWaitTime_sec; i+=waitPeriod_sec){
+    delay(waitPeriod_sec*1000);
     usbSerial.println("Time waited:");
     usbSerial.println(i);
     if(AVRIsNotecardConnected()){
@@ -451,7 +474,8 @@ void AVRNotecardCheckForUpdate(){
   usbSerial.println(F("Checking notecard dfu status"));
   Serial.flush();
   // check if dfu mode is ready and if so, retrieve the update size
-  long updateSize = AVRCheckNotecatdDFUMode(100000);
+  char imageMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
+  long updateSize = AVRCheckNotecatdDFUMode(100000, imageMD5);
   
   // if updateSize is zero, the update is not ready
   if (!updateSize) {
@@ -474,24 +498,30 @@ void AVRNotecardCheckForUpdate(){
   } 
 
   bool payloadEmpty = false;
-  int chunkSize = 1024;
+  int chunkSize = 256;
   long offset = 0;
-  unsigned char* payload;
+  char* payload;
   int maxNumOfErrors = 10;
   int numOfErrors = 0;
+  NoteMD5Context md5Context;
+  NoteMD5Init(&md5Context);
 
   //receive update chunk by chunk and save it to flash memory
   for (offset; offset < updateSize; offset+=chunkSize)
   {  
+    
     if(maxNumOfErrors < numOfErrors)
         break;
 
     //retrieve decoded payload chunk with given offset
     payload = AVRRetrieveNotecardPayloadChunk(numOfErrors, offset, chunkSize);
+    
     if (payload == NULL) {
         AVRReturnNotecardFromDFU();
         return;
     }
+    // MD5 the chunk
+    NoteMD5Update(&md5Context, (uint8_t *)payload, chunkSize);
 
     //after receiving and decoding payload
     //write received data to flash
@@ -503,12 +533,25 @@ void AVRNotecardCheckForUpdate(){
     // Move to next chunk
     usbSerial.print(F("dfu: chunk successfully saved to flash, offset: "));
     usbSerial.println(offset);
-    notecard.logDebugf("dfu: successfully transferred offset:%d, offset");
+    //notecard.logDebugf("dfu: successfully transferred offset:%d, offset");
   }
-    
 
   //after saving new update, stop dfu mode
   AVRReturnNotecardFromDFU();
+
+  // Validate the MD5
+  uint8_t md5Hash[NOTE_MD5_HASH_SIZE];
+  NoteMD5Final(md5Hash, &md5Context);
+  char md5HashString[NOTE_MD5_HASH_STRING_SIZE];
+  NoteMD5HashToString(md5Hash, md5HashString, sizeof(md5HashString));
+  usbSerial.print(F("dfu:    MD5 of image:"));
+  usbSerial.println(imageMD5);
+  usbSerial.print(F("dfu: MD5 of download:"));
+  usbSerial.println(md5HashString);
+  if (strcmp(imageMD5, md5HashString) != 0) {
+      notecard.logDebugf("Error: MD5 MISMATCH - ABANDONING DFU\n");
+      return;
+  }
 
   //close flash
   InternalStorage.close();
