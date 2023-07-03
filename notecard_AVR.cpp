@@ -10,7 +10,28 @@ Notecard notecard;
 
 bool noteCardIsSyncing = false;
 
+int AVRInitNotecardGPS(){
+  /**
+   * @brief initialize the notecard GPS
+   * @return int 1 if success, 0 if error
+  */
+  J *req = NoteNewRequest("card.location.mode");
+  if (req==NULL){
+    return RETURN_ERROR;
+  }
+  AVRJAddStringToObject(req, "mode", F("periodic"));
+  JAddNumberToObject(req, "seconds", GPS_CONNECTION_PERIOD_SEC);
+  notecard.sendRequest(req);
+  return RETURN_SUCCESS;
+}
+
 void moveStringToRAM(const char* source, char** destination) {
+  /**
+   * @brief move a string from flash memory to RAM
+   * @param source the string in flash memory
+   * @param destination the string in RAM
+   * @return void
+  */
   size_t len = strlen_P(source) + 1; // +1 for the null terminator
   *destination = (char*) malloc(len);
   if (*destination) {
@@ -19,6 +40,11 @@ void moveStringToRAM(const char* source, char** destination) {
 }
 
 void freeRAMString(char** str) {
+  /**
+   * @brief free a string in RAM
+   * @param str the string in RAM
+   * @return void
+  */
   if (*str) {
     free(*str);
     *str = NULL;
@@ -26,6 +52,12 @@ void freeRAMString(char** str) {
 }
 
 J* AVRNoteNewRequest(const __FlashStringHelper* request) {
+  /**
+   * AVR wrapper for NoteNewRequest
+   * @brief create a new notecard request
+   * @param request the request name in flash memory
+   * @return J* the request JSON object
+  */
   // Get the length of the flash string
   size_t len = strlen_P((PGM_P)request);
 
@@ -47,6 +79,14 @@ J* AVRNoteNewRequest(const __FlashStringHelper* request) {
 }
 
 N_CJSON_PUBLIC(J*) AVRJAddStringToObject(J* const object, const char* const name, const __FlashStringHelper* string) {
+  /**
+   * AVR wrapper for JAddStringToObject
+   * @brief add a string to a JSON object
+   * @param object the JSON object
+   * @param name the name of the string in JSON object
+   * @param string the added string in flash memory
+   * @return J* the JSON object
+  */
   // Get the length of the flash string
   size_t len = strlen_P((PGM_P)string);
 
@@ -68,6 +108,11 @@ N_CJSON_PUBLIC(J*) AVRJAddStringToObject(J* const object, const char* const name
 }
 
 int AVRNotecardInit(bool debugMode){
+    /**
+     * @brief initialize the notecard
+     * @param debugMode true if debug mode is on, false otherwise
+     * @return int 1 if success, 0 if error
+    */
     while (!usbSerial) {
       ; // wait for serial port to connect. Needed for native USB
     }
@@ -98,10 +143,17 @@ int AVRNotecardInit(bool debugMode){
     if(!AVRStartNotecardSync()){
       return RETURN_ERROR;
     }
+    if(!AVRInitNotecardGPS()){
+      usbSerial.println(F("Not enough memory for gps init"));
+    }
     return RETURN_SUCCESS;
 }
 
 int AVRIsNotecardConnected(){
+    /**
+     * @brief check if the notecard is connected
+     * @return int 1 if connected, 0 if not connected
+    */
     char status[30];
     long time = 0;
     J* req = AVRNoteNewRequest(F("hub.sync.status"));
@@ -126,6 +178,10 @@ int AVRIsNotecardConnected(){
 }
 
 int AVRStartNotecardSync(){
+    /**
+     * @brief start notecard sync
+     * @return int 1 if success, 0 if error
+    */
   if(!noteCardIsSyncing){
       J* req = AVRNoteNewRequest(F("hub.sync"));
       if (req != NULL) {
@@ -141,6 +197,12 @@ int AVRStartNotecardSync(){
 }
 
 int AVRCheckNotecatdDFUMode(int maxUpdateSize) {
+  /**
+   * Checks the notecard DFU mode and returns the size of the update if one is available
+   * @brief check the notecard DFU mode
+   * @param maxUpdateSize the maximum size of the update
+   * @return available update size if mode is ready, 0 if error or no update available
+  */
   // variables to store the response from dfu.status
   char mode[20];
   char status[40];
@@ -177,6 +239,11 @@ int AVRCheckNotecatdDFUMode(int maxUpdateSize) {
 }
 
 int AVRSetNotecardToDFU(int maxWaitTime_sec){
+  /**
+   * @brief set the notecard to DFU mode
+   * @param maxWaitTime_sec the maximum time to wait for the notecard to enter DFU mode
+   * @return int 1 if success, 0 if error
+  */
   //set notecard to dfu mode
   J* req = AVRNoteNewRequest(F("hub.set"));
   if(req != NULL){
@@ -225,6 +292,13 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
 }
 
 unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize) {
+    /**
+     * @brief retrieve a chunk of downloaded update from the notecard
+     * @param numOfErrors the current number of errors that occured during the download
+     * @param offset the offset of the chunk
+     * @param chunkSize the size of the chunk
+     * @return unsigned char* the chunk of data
+    */
     int8_t max_retries = 5;
     //static unsigned char payload[64]; // assuming a fixed size of 512 for payload
     //dynamic allocation of payload
@@ -320,6 +394,10 @@ unsigned char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, in
 }
 
 int AVRReturnNotecardFromDFU(){
+  /**
+  * This function returns the notecard from DFU mode to continuous operation
+  * @return int 0 if success, 1 if error
+  */
   J* req = AVRNoteNewRequest(F("dfu.status"));
   if(req != NULL){
     JAddBoolToObject(req, "stop", true);
@@ -342,8 +420,10 @@ int AVRReturnNotecardFromDFU(){
 }
 
 void AVRNotecardCheckForUpdate(){
-  /*
-  This function checks for an update and if there is one, it puts the notecard in DFU mode and peforms the update
+  /**
+  * Checks for an update and if there is one, it puts the notecard in DFU mode and peforms the update
+  * @brief Checks for an update
+  * @return void
   */
 
   //start notecard sync and wait if it connects or not for one minute
