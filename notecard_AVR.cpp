@@ -306,12 +306,6 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
      * @return unsigned char* the chunk of data
     */
     int8_t max_retries = 5;
-    //static unsigned char payload[64]; // assuming a fixed size of 512 for payload
-    //dynamic allocation of payload
-    //check if enough memory is available
-    
-    //unsigned char* payload = new unsigned char[chunkSize];
-    
     bool payloadEmpty = true;
     char* payload = NULL;
 
@@ -320,19 +314,13 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         //if its not first try, half the size of the allocated payload
         if (retry > 0) {
             chunkSize = chunkSize / 2;
-            
-            // delete[] payload;
-            // 
-            // payload = new unsigned char[chunkSize];
-            // 
         }
         //if this is the last try, set the chunk size to 1
         //or if there was not enough memory to allocate the payload
+        //or if for some reason chunksize is of incorrect value
         //this is to ensure that we get the last chunk of data
-        if ((retry == max_retries - 1) && chunkSize > 1) {
+        if (((retry == max_retries - 1) && chunkSize > 1) || chunkSize < 1) {
             chunkSize = 1;
-            // delete[] payload;
-            // payload = new unsigned char[chunkSize];
         }
         usbSerial.print(F("dfy: reading chunk (offset: "));
         usbSerial.print(offset);
@@ -341,11 +329,9 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         usbSerial.print(F(" try: "));
         usbSerial.println(retry + 1);
         // Request the next chunk from the notecard
-        
         J* req = AVRNoteNewRequest(F("dfu.get"));
         if (req == NULL) {
             usbSerial.println(F("dfu: insufficient memory\n"));
-            //delete[] payload;
             return NULL;
         }
         JAddNumberToObject(req, "length", chunkSize);
@@ -353,11 +339,9 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         
         // Requesting current chunk of data
         J* rsp = notecard.requestAndResponse(req);
-        
         if (rsp == NULL) {
             usbSerial.println(F("dfu: insufficient memory\n"));
             notecard.deleteResponse(rsp);
-            //delete[] payload;
             return NULL;
         } else if (notecard.responseError(rsp)) {
             //with heighest probability means that we are requesting data that are out of update size
@@ -368,7 +352,6 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
             numOfErrors++;
             continue;
         } else {
-            
             payload = JGetString(rsp, "payload");
             if (payload[0] == '\0') {
                 usbSerial.println(F("dfu: no payload"));
@@ -376,8 +359,6 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
                 payloadEmpty = true;
                 break;
             }
-            
-            //int num_bytes = UnBase64((unsigned char*)payload, (const unsigned char*)payload, strlen(payload));
             int num_bytes = AVRUnBase64((char*)payload);
             
             const char *expectedMD5 = JGetString(rsp, "status");
@@ -410,7 +391,6 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
     }
 
     if (payloadEmpty) {
-       // delete[] payload;
         return NULL;
     } else {
         return payload;
@@ -516,7 +496,6 @@ void AVRNotecardCheckForUpdate(){
         break;
 
     //retrieve decoded payload chunk with given offset
-    
     payload = AVRRetrieveNotecardPayloadChunk(numOfErrors, offset, chunkSize);
     
     if (payload == NULL) {
