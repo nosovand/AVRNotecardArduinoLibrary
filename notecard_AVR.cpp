@@ -225,7 +225,7 @@ int AVRStartNotecardSync(){
   return RETURN_SUCCESS;
 }
 
-int AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
+long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
   /**
    * Checks the notecard DFU mode and returns the size of the update if one is available
    * @brief check the notecard DFU mode
