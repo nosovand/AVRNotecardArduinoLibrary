@@ -5,6 +5,7 @@
 #include "myBase64.h"
 #include "InternalStorageAVR.h"
 #include "memoryTest.h"
+#include "debugConsole.hpp"
 
 Notecard notecard;
 
@@ -139,14 +140,18 @@ int AVRNotecardInit(bool debugMode){
      * @param debugMode true if debug mode is on, false otherwise
      * @return int 1 if success, 0 if error
     */
-    while (!usbSerial) {
-      ; // wait for serial port to connect. Needed for native USB
-    }
+    // while (!usbSerial) {
+    //   ; // wait for serial port to connect. Needed for native USB
+    // }
     //start notecard communication
     notecard.begin(txRxPinsSerial, 9600);
-    if(debugMode){
+    if(debugMode && debugConsole.getConsoleMode() != DEBUG_CONSOLE_MODE_SPI && usbSerial != txRxPinsSerial){
       // Initialize the Notecard debug port
+      debugConsole.println("Notecard debug stream was activated");
       notecard.setDebugOutputStream(usbSerial);
+    }
+    else{
+      debugConsole.println("Notecard debug stream was not activated");
     }
     J *req = notecard.newRequest("hub.set");
     if (req != NULL) {
@@ -173,7 +178,7 @@ int AVRNotecardInit(bool debugMode){
       return RETURN_ERROR;
     }
     if(!AVRInitNotecardGPS()){
-      usbSerial.println(F("Not enough memory for gps init"));
+      debugConsole.println(F("Not enough memory for gps init"));
     }
     return RETURN_SUCCESS;
 }
@@ -309,7 +314,7 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
           AVRJAddStringToObject(req, "mode", F("dfu-completed"));
           notecard.sendRequest(req);
       }
-      usbSerial.println(F("Failed to enter DFU mode"));
+      debugConsole.println(F("Failed to enter DFU mode"));
       return RETURN_ERROR;
   }
   return RETURN_SUCCESS;
@@ -340,16 +345,16 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         if (((retry == max_retries - 1) && chunkSize > 1) || chunkSize < 1) {
             chunkSize = 1;
         }
-        usbSerial.print(F("dfy: reading chunk (offset: "));
-        usbSerial.print(offset);
-        usbSerial.print(F(" length: "));
-        usbSerial.print(chunkSize);
-        usbSerial.print(F(" try: "));
-        usbSerial.println(retry + 1);
+        debugConsole.print(F("dfy: reading chunk (offset: "));
+        debugConsole.print(offset);
+        debugConsole.print(F(" length: "));
+        debugConsole.print(chunkSize);
+        debugConsole.print(F(" try: "));
+        debugConsole.println(retry + 1);
         // Request the next chunk from the notecard
         J* req = AVRNoteNewRequest(F("dfu.get"));
         if (req == NULL) {
-            usbSerial.println(F("dfu: insufficient memory\n"));
+            debugConsole.println(F("dfu: insufficient memory\n"));
             return NULL;
         }
         JAddNumberToObject(req, "length", chunkSize);
@@ -358,21 +363,21 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         // Requesting current chunk of data
         J* rsp = notecard.requestAndResponse(req);
         if (rsp == NULL) {
-            usbSerial.println(F("dfu: insufficient memory\n"));
+            debugConsole.println(F("dfu: insufficient memory\n"));
             notecard.deleteResponse(rsp);
             return NULL;
         } else if (notecard.responseError(rsp)) {
             //with heighest probability means that we are requesting data that are out of update size
             //the chunk size will be smaller for the next retry
-            usbSerial.print(F("dfu: error on read: "));
-            usbSerial.println(JGetString(rsp, "err"));
+            debugConsole.print(F("dfu: error on read: "));
+            debugConsole.println(JGetString(rsp, "err"));
             notecard.deleteResponse(rsp);
             numOfErrors++;
             continue;
         } else {
             payload = JGetString(rsp, "payload");
             if (payload[0] == '\0') {
-                usbSerial.println(F("dfu: no payload"));
+                debugConsole.println(F("dfu: no payload"));
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 break;
@@ -384,22 +389,22 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
             NoteMD5HashString((uint8_t *)payload, num_bytes, chunkMD5, sizeof(chunkMD5));
             
             if (num_bytes < 0) {
-                usbSerial.println(F("dfu: can't decode payload\n"));
+                debugConsole.println(F("dfu: can't decode payload\n"));
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 continue;
             } else if (num_bytes != chunkSize) {
-                usbSerial.println(F("dfu: payload size mismatch\n"));
+                debugConsole.println(F("dfu: payload size mismatch\n"));
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 continue;
             } else if (strcmp(chunkMD5, expectedMD5)!=0){
-                usbSerial.println(F("dfu: MD5 mismatch\n"));
+                debugConsole.println(F("dfu: MD5 mismatch\n"));
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 continue;
             } else {
-                usbSerial.println(F("dfu: payload decoded"));
+                debugConsole.println(F("dfu: payload decoded"));
                 payloadEmpty = false;
                 //notecard.deleteResponse(rsp);
                 AVRJDeleteWithoutPayload(rsp);
@@ -450,7 +455,7 @@ void AVRNotecardCheckForUpdate(){
 
   //start notecard sync and wait if it connects or not for one minute
   //if it does not connect, return
-  usbSerial.println(F("Starting notecard sync"));
+  debugConsole.println(F("Starting notecard sync"));
   Serial.flush();
   int maxWaitTime_sec = 120;
   int waitPeriod_sec = 20;
@@ -458,8 +463,8 @@ void AVRNotecardCheckForUpdate(){
   
   for(int i = 0; i < maxWaitTime_sec; i+=waitPeriod_sec){
     delay(waitPeriod_sec*1000);
-    usbSerial.println("Time waited:");
-    usbSerial.println(i);
+    debugConsole.println("Time waited:");
+    debugConsole.println(i);
     if(AVRIsNotecardConnected()){
       break;
     }
@@ -467,11 +472,11 @@ void AVRNotecardCheckForUpdate(){
     txRxPinsSerial.flush();
   }
   if(!AVRIsNotecardConnected()){
-    usbSerial.println("Waited too long for connection, return");
+    debugConsole.println("Waited too long for connection, return");
     return;
   }
 
-  usbSerial.println(F("Checking notecard dfu status"));
+  debugConsole.println(F("Checking notecard dfu status"));
   Serial.flush();
   // check if dfu mode is ready and if so, retrieve the update size
   char imageMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
@@ -479,14 +484,14 @@ void AVRNotecardCheckForUpdate(){
   
   // if updateSize is zero, the update is not ready
   if (!updateSize) {
-    usbSerial.println(F("No update available"));
+    debugConsole.println(F("No update available"));
     return;
   }
 
   //put notecard in dfu mode with max wait time 120 seconds
-  usbSerial.println(F("putting notecard in dfu mode"));
+  debugConsole.println(F("putting notecard in dfu mode"));
   if(!AVRSetNotecardToDFU(120)){
-    usbSerial.println(F("Could not enter dfu"));
+    debugConsole.println(F("Could not enter dfu"));
     return;
   }
 
@@ -531,8 +536,8 @@ void AVRNotecardCheckForUpdate(){
     //free memory
     delete[] payload;
     // Move to next chunk
-    usbSerial.print(F("dfu: chunk successfully saved to flash, offset: "));
-    usbSerial.println(offset);
+    debugConsole.print(F("dfu: chunk successfully saved to flash, offset: "));
+    debugConsole.println(offset);
     //notecard.logDebugf("dfu: successfully transferred offset:%d, offset");
   }
 
@@ -544,10 +549,10 @@ void AVRNotecardCheckForUpdate(){
   NoteMD5Final(md5Hash, &md5Context);
   char md5HashString[NOTE_MD5_HASH_STRING_SIZE];
   NoteMD5HashToString(md5Hash, md5HashString, sizeof(md5HashString));
-  usbSerial.print(F("dfu:    MD5 of image:"));
-  usbSerial.println(imageMD5);
-  usbSerial.print(F("dfu: MD5 of download:"));
-  usbSerial.println(md5HashString);
+  debugConsole.print(F("dfu:    MD5 of image:"));
+  debugConsole.println(imageMD5);
+  debugConsole.print(F("dfu: MD5 of download:"));
+  debugConsole.println(md5HashString);
   if (strcmp(imageMD5, md5HashString) != 0) {
       notecard.logDebugf("Error: MD5 MISMATCH - ABANDONING DFU\n");
       return;
