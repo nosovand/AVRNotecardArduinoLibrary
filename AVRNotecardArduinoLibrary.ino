@@ -3,7 +3,7 @@
 #include "debugConsole.hpp"
 
 void setup() {
-  debugConsole.init(DEBUG_CONSOLE_MODE_UART_AND_SPI);
+  debugConsole.init(DEBUG_CONSOLE_MODE_SPI);
   initFreeMemory();
   //Serial.begin(115200);
   debugConsole.println(F("Starting program"));

@@ -296,8 +296,8 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
             inDFUMode = true;
         }
         else{
-            //Serial.println(F("DFU error:"));
-            //Serial.println(JGetString(rsp, "err"));
+            //debugConsole.println(F("DFU error:"));
+            //debugConsole.println(JGetString(rsp, "err"));
         }
         notecard.deleteResponse(rsp);
     }
@@ -454,7 +454,7 @@ void AVRNotecardCheckForUpdate(){
   //start notecard sync and wait if it connects or not for one minute
   //if it does not connect, return
   debugConsole.println(F("Starting notecard sync"));
-  Serial.flush();
+  //Serial.flush();
   int maxWaitTime_sec = 120;
   int waitPeriod_sec = 20;
   AVRStartNotecardSync();
@@ -466,8 +466,8 @@ void AVRNotecardCheckForUpdate(){
     if(AVRIsNotecardConnected()){
       break;
     }
-    usbSerial.flush();
-    txRxPinsSerial.flush();
+    //usbSerial.flush();
+    //txRxPinsSerial.flush();
   }
   if(!AVRIsNotecardConnected()){
     debugConsole.println("Waited too long for connection, return");
@@ -475,7 +475,7 @@ void AVRNotecardCheckForUpdate(){
   }
 
   debugConsole.println(F("Checking notecard dfu status"));
-  Serial.flush();
+  //Serial.flush();
   // check if dfu mode is ready and if so, retrieve the update size
   char imageMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
   long updateSize = AVRCheckNotecatdDFUMode(100000, imageMD5);
@@ -496,7 +496,7 @@ void AVRNotecardCheckForUpdate(){
   // check if there is enough space to store the update
   if (!InternalStorage.open(updateSize)) {
     AVRReturnNotecardFromDFU();
-    Serial.println(F("There is not enough flash space to store the update. Can't continue with update."));
+    debugConsole.println(F("There is not enough flash space to store the update. Can't continue with update."));
     return;
   } 
 
@@ -558,8 +558,8 @@ void AVRNotecardCheckForUpdate(){
 
   //close flash
   InternalStorage.close();
-  Serial.println(F("Sketch update apply and reset."));
-  Serial.flush();
+  debugConsole.println(F("Sketch update apply and reset."));
+  //Serial.flush();
   //apply update (swap flash)
   InternalStorage.apply(); // this doesn't return
 }
