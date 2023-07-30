@@ -160,20 +160,22 @@ int AVRNotecardInit(bool debugMode){
     else{
       return RETURN_ERROR;
     }
-    // req = AVRNoteNewRequest(F("card.dfu"));
-    // if (req != NULL){
-    //   AVRJAddStringToObject(req, "name", F("-"));
-    //   JAddBoolToObject(req, "off", true);
-    //   notecard.sendRequest(req);
-    // }
-    // else{
-    //   return RETURN_ERROR;
-    // }
+    req = AVRNoteNewRequest(F("card.dfu"));
+    if (req != NULL){
+      AVRJAddStringToObject(req, "name", F("-"));
+      JAddBoolToObject(req, "off", true);
+      notecard.sendRequest(req);
+    }
+    else{
+      return RETURN_ERROR;
+    }
 
     //TODO: Notify notecard of out current software verion
 
-    if(!AVRStartNotecardSync()){
-      return RETURN_ERROR;
+    if(!AVRIsNotecardConnected()){
+      if(!AVRStartNotecardSync()){
+        return RETURN_ERROR;
+      }
     }
     if(!AVRInitNotecardGPS()){
       debugConsole.println(F("Not enough memory for gps init"));
@@ -198,6 +200,14 @@ int AVRIsNotecardConnected(){
       tmpStatus = JGetString(syncRsp, "status");
       strlcpy(status, tmpStatus, sizeof(status));
       time = JGetInt(syncRsp, "time");
+      debugConsole.print(F("Notecard status: "));
+      if(time){
+        debugConsole.print("time: ");
+        debugConsole.println(time);
+      }
+      else{
+        debugConsole.println(tmpStatus);
+      }
       notecard.deleteResponse(syncRsp);
     }
     if(strstr(status, "{connected}") != NULL || strstr(status, "{sync-end}") != NULL || time != 0){
@@ -214,6 +224,7 @@ int AVRStartNotecardSync(){
      * @brief start notecard sync
      * @return int 1 if success, 0 if error
     */
+  debugConsole.println(F("Starting notecard sync"));
   if(!noteCardIsSyncing){
       J* req = AVRNoteNewRequest(F("hub.sync"));
       if (req != NULL) {
@@ -453,7 +464,7 @@ void AVRNotecardCheckForUpdate(){
 
   //start notecard sync and wait if it connects or not for one minute
   //if it does not connect, return
-  debugConsole.println(F("Starting notecard sync"));
+
   //Serial.flush();
   int maxWaitTime_sec = 120;
   int waitPeriod_sec = 20;
