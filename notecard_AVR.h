@@ -4,7 +4,7 @@
 #define RETURN_ERROR 0
 #define NOTE_PRODUCT_UID F("com.gmail.work.kp.an:firsttest")
 #define usbSerial Serial
-#define txRxPinsSerial Serial2
+#define txRxPinsSerial Serial
 #define DEBUG_MODE true
 #define RELEASE_MODE false
 #define ALARM_A F("Alarm A")
