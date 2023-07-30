@@ -10,13 +10,15 @@ void setup() {
   SHOW_SIZES
   // initialize notecard library
   AVRNotecardInit(true);
-
+  debugConsole.println(F("############## SOFTWARE VERSION 0.1.0 #############"));
 }
 
 void loop() {
-  debugConsole.println(F("############## SOFTWARE VERSION 0.1.0 #############"));
-  SHOW_SIZES
+
+  //SHOW_SIZES
   // check for update
-  AVRNotecardCheckForUpdate();
-  delay(15000);
+  if(debugConsole.receivedString("++CU")){
+    AVRNotecardCheckForUpdate();
+  }
+  //delay(15000);
 }
