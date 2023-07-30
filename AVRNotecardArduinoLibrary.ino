@@ -17,8 +17,15 @@ void loop() {
 
   //SHOW_SIZES
   // check for update
-  if(debugConsole.receivedString("++CU")){
-    AVRNotecardCheckForUpdate();
+  if(debugConsole.available()){
+    debugConsole.print("received command: ");
+    debugConsole.println(debugConsole.readString());
+    if(debugConsole.receivedString("++CU")){
+      AVRNotecardCheckForUpdate();
+    }
+    else {
+      debugConsole.println("For checking for a new update print '++CU'");
+    }
   }
   //delay(15000);
 }
