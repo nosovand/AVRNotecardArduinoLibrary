@@ -1,5 +1,3 @@
-//#include "note-c/note.h"
-//#include "note-c/n_cjson.h"
 #include "Arduino.h"
 #include "notecard_AVR.h"
 #include "myBase64.h"
