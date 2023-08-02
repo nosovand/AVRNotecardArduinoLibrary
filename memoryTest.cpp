@@ -4,6 +4,8 @@
 #include <WProgram.h>
 #endif
 
+#include "debugConsole.hpp"
+
 extern unsigned int __heap_start;
 extern void *__brkval;
 
@@ -58,29 +60,29 @@ void initFreeMemory()
 
  free_size = (unsigned int)stack_top - (unsigned int)heap_end + freeListSize();
 
- Serial.print(F("bss_size = "));
- Serial.println(heap_start);
+ debugConsole.print(F("bss_size = "));
+ debugConsole.println(heap_start);
 
- Serial.print(F("\nstack_top = "));
- Serial.println(stack_top);
- Serial.print(F("stack_bottom = "));
- Serial.println(stack_bottom);
- Serial.print(F("stack_size = "));
- Serial.println(stack_size);
+ debugConsole.print(F("\nstack_top = "));
+ debugConsole.println(stack_top);
+ debugConsole.print(F("stack_bottom = "));
+ debugConsole.println(stack_bottom);
+ debugConsole.print(F("stack_size = "));
+ debugConsole.println(stack_size);
 
- Serial.print(F("\nheap start = "));
- Serial.println(heap_start);
- Serial.print(F("heap end = "));
- Serial.println(heap_end);
- Serial.print(F("heap size = "));
- Serial.println(heap_size);
+ debugConsole.print(F("\nheap start = "));
+ debugConsole.println(heap_start);
+ debugConsole.print(F("heap end = "));
+ debugConsole.println(heap_end);
+ debugConsole.print(F("heap size = "));
+ debugConsole.println(heap_size);
 
- Serial.print(F("\nfree_size = "));
- Serial.println(free_size);
- Serial.print(F("used_size = "));
- Serial.println(max_ram - free_size);
+ debugConsole.print(F("\nfree_size = "));
+ debugConsole.println(free_size);
+ debugConsole.print(F("used_size = "));
+ debugConsole.println(max_ram - free_size);
 
- Serial.print(F("\n"));
+ debugConsole.print(F("\n"));
 }
 
 
@@ -88,10 +90,10 @@ void setMark(const __FlashStringHelper *s, int line)
 {
  char __stack = 0;
 
- Serial.print(s);
- Serial.print(":");
- Serial.print(line);
- Serial.println(": Mark set");
+ debugConsole.print(s);
+ debugConsole.print(":");
+ debugConsole.print(line);
+ debugConsole.println(": Mark set");
 
  mark_stack = ((unsigned int)&__stack - RAMSTART) + 1;
  mark_stack = stack_top - mark_stack;
@@ -108,10 +110,10 @@ void showMark(const __FlashStringHelper *s, int line)
 {
  char __stack = 0;
 
- Serial.print(s);
- Serial.print(":");
- Serial.print(line);
- Serial.print(": Mark");
+ debugConsole.print(s);
+ debugConsole.print(":");
+ debugConsole.print(line);
+ debugConsole.print(": Mark");
 
  stack_bottom = ((unsigned int)&__stack - RAMSTART) + 1;
  stack_size = stack_top - stack_bottom;
@@ -126,10 +128,10 @@ void showMark(const __FlashStringHelper *s, int line)
  }
  heap_size = heap_end - heap_start;
 
- Serial.print(F(" stack: "));
- Serial.print((int)stack_size - (int)mark_stack);
- Serial.print(F("/heap: "));
- Serial.println((int)heap_size - (int)mark_heap);
+ debugConsole.print(F(" stack: "));
+ debugConsole.print((int)stack_size - (int)mark_stack);
+ debugConsole.print(F("/heap: "));
+ debugConsole.println((int)heap_size - (int)mark_heap);
 }
 
 
@@ -137,10 +139,10 @@ void showSizes(const __FlashStringHelper *s, int line)
 {
  char __stack = 0;
 
- Serial.print(s);
- Serial.print(":");
- Serial.print(line);
- Serial.print(":");
+ debugConsole.print(s);
+ debugConsole.print(":");
+ debugConsole.print(line);
+ debugConsole.print(":");
 
  stack_bottom = (unsigned int)&__stack - RAMSTART + 1;
  stack_size = stack_top - stack_bottom;
@@ -156,16 +158,16 @@ void showSizes(const __FlashStringHelper *s, int line)
  heap_size = heap_end - heap_start;
  free_size = stack_bottom - heap_end + freeListSize();
 
- Serial.print(F(" free:"));
- Serial.print(free_size);
- Serial.print(F(" used:"));
- Serial.print(max_ram - free_size);
- Serial.print(F(" ("));
- Serial.print(stack_size);
- Serial.print(F("/"));
- Serial.print(heap_size);
- Serial.print(F(")"));
- Serial.print(F("\n"));
+ debugConsole.print(F(" free:"));
+ debugConsole.print(free_size);
+ debugConsole.print(F(" used:"));
+ debugConsole.print(max_ram - free_size);
+ debugConsole.print(F(" ("));
+ debugConsole.print(stack_size);
+ debugConsole.print(F("/"));
+ debugConsole.print(heap_size);
+ debugConsole.print(F(")"));
+ debugConsole.print(F("\n"));
 }
 
 
@@ -203,36 +205,36 @@ void showMem(void)
 {
  char __stack = 0;
 
- Serial.print(F("__brkval="));
- Serial.println((unsigned int)__brkval);
- Serial.print(F("__heap_start="));
- Serial.println((unsigned int)__heap_start);
- Serial.print(F("__malloc_heap_start="));
- Serial.println((unsigned int)__malloc_heap_start);
- Serial.print(F("__malloc_margin="));
- Serial.println((unsigned int)__malloc_margin);
- Serial.print(F("__flp="));
- Serial.println((unsigned int)__flp);
- Serial.print(F("__stack="));
- Serial.println((unsigned int)&__stack);
- Serial.print(F("stack size="));
- Serial.println(RAMEND - (unsigned int)&__stack);
- Serial.print(F("Heap size="));
- Serial.println((unsigned int)__brkval - RAMSTART);
+ debugConsole.print(F("__brkval="));
+ debugConsole.println((unsigned int)__brkval);
+ debugConsole.print(F("__heap_start="));
+ debugConsole.println((unsigned int)__heap_start);
+ debugConsole.print(F("__malloc_heap_start="));
+ debugConsole.println((unsigned int)__malloc_heap_start);
+ debugConsole.print(F("__malloc_margin="));
+ debugConsole.println((unsigned int)__malloc_margin);
+ debugConsole.print(F("__flp="));
+ debugConsole.println((unsigned int)__flp);
+ debugConsole.print(F("__stack="));
+ debugConsole.println((unsigned int)&__stack);
+ debugConsole.print(F("stack size="));
+ debugConsole.println(RAMEND - (unsigned int)&__stack);
+ debugConsole.print(F("Heap size="));
+ debugConsole.println((unsigned int)__brkval - RAMSTART);
  
  total = 0;
  for (current = __flp; current; current = current->nx)
  {
  total += 2; /* Add two bytes for the memory block's header  */
  total += (int) current->sz;
- Serial.print(F("mblk: sz="));
- Serial.print((unsigned int)current->sz);
- Serial.print(F(" nx="));
- Serial.println((unsigned int)current->nx);
- Serial.print(F("Total: "));
- Serial.println(total);
+ debugConsole.print(F("mblk: sz="));
+ debugConsole.print((unsigned int)current->sz);
+ debugConsole.print(F(" nx="));
+ debugConsole.println((unsigned int)current->nx);
+ debugConsole.print(F("Total: "));
+ debugConsole.println(total);
  }
- Serial.println(F("\n"));
+ debugConsole.println(F("\n"));
 }
 
 
@@ -240,7 +242,7 @@ void showMemory(const char *s)
 {
  char __stack = 0;
  
- Serial.println(s);
+ debugConsole.println(s);
  showMem();
 }
 
@@ -249,6 +251,6 @@ void showMemory_P(const __FlashStringHelper *s)
 {
  char __stack = 0;
  
- Serial.println(s);
+ debugConsole.println(s);
  showMem();
 }
