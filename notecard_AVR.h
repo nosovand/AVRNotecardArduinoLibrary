@@ -26,7 +26,7 @@ extern AVRNotecardParameters notecardParameters;
 
 #define GPS_CONNECTION_PERIOD_SEC 60
 
-int AVRNotecardInit(bool debugMode);
+int AVRNotecardInit(uint8_t logMode = 2, bool debugStream = false);
 int AVRInitNotecardGPS();
 int AVRStartNotecardSync();
 int AVRIsNotecardConnected();
@@ -42,3 +42,5 @@ N_CJSON_PUBLIC(J*) AVRJAddStringToObject(J* const object, const char* const name
 
 void moveStringToRAM(const char* source, char** destination);
 void freeRAMString(char** str);
+
+uint8_t memoryError();
