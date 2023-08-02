@@ -467,22 +467,25 @@ void AVRNotecardCheckForUpdate(){
   //if it does not connect, return
 
   //Serial.flush();
-  int maxWaitTime_sec = 120;
-  int waitPeriod_sec = 20;
-  AVRStartNotecardSync();
+  // int maxWaitTime_sec = 120;
+  // int waitPeriod_sec = 20;
+  // AVRStartNotecardSync();
   
-  for(int i = 0; i < maxWaitTime_sec; i+=waitPeriod_sec){
-    delay(waitPeriod_sec*1000);
-    debugConsole.println("Time waited:");
-    debugConsole.println(i);
-    if(AVRIsNotecardConnected()){
-      break;
-    }
-    //usbSerial.flush();
-    //txRxPinsSerial.flush();
-  }
+  // for(int i = 0; i < maxWaitTime_sec; i+=waitPeriod_sec){
+  //   delay(waitPeriod_sec*1000);
+  //   debugConsole.println("Time waited:");
+  //   debugConsole.println(i);
+  //   if(AVRIsNotecardConnected()){
+  //     break;
+  //   }
+  //   //usbSerial.flush();
+  //   //txRxPinsSerial.flush();
+  // }
+
+  //check if notecard is connected to network
   if(!AVRIsNotecardConnected()){
-    debugConsole.println("Waited too long for connection, return");
+    debugConsole.println(F("Notecard is not synced, cannot check for update"));
+    AVRStartNotecardSync();
     return;
   }
 
