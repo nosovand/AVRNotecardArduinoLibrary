@@ -155,6 +155,7 @@ int AVRNotecardInit(bool debugMode){
     if (req != NULL) {
       AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
       AVRJAddStringToObject(req, "mode", F("continuous"));
+      JAddNumberToObject(req, "inbound", 2); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
       notecard.sendRequest(req);
     }
     else{
