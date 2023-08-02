@@ -1,13 +1,8 @@
-/*----------------------- notecard AVR header file -------------------------|
- | libabry version 0.2.0                                                    |
- |                  																												|
- | 2023 by Andrey Nosov, https://github.com/nosovand                        |
- |                                                                          |
- | C++ library for easy and memory friendly communication                   |
- | with Notecard on AVR mega processors.                                    |
- |-------------------------------------------------------------------------*/
+#define NOTECARD_LIBRARY_DEBUG_MODE 0
+#define NOTECARD_LIBRARY_RELEASE_MODE 1
+#define NOTECARD_LIBRARY_NO_PRINT_MODE 2
 
 struct AVRNotecardParameters{
-
+  uint8_t libraryMode;
 };
 
