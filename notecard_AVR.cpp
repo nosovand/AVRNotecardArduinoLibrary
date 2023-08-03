@@ -474,8 +474,11 @@ int AVRReturnNotecardFromDFU(bool success){
   * @param success defines if update was successful
   * @return int 0 if success, 1 if error
   */
+  if(!success){
+    avrNotecardLog.println(F("Unsuccessful update"), ERROR_LOG);
+  }
   avrNotecardLog.println(F("Returning from DFU"), DEBUG_LOG);
-
+  
   J* req = AVRNoteNewRequest(F("dfu.status"));
   if(req != NULL){
     JAddBoolToObject(req, "stop", true);
