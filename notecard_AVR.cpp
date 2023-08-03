@@ -468,21 +468,29 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
     }
 }
 
-int AVRReturnNotecardFromDFU(){
+int AVRReturnNotecardFromDFU(bool success){
   /**
   * This function returns the notecard from DFU mode to continuous operation
+  * @param success defines if update was successful
   * @return int 0 if success, 1 if error
   */
   avrNotecardLog.println(F("Returning from DFU"), DEBUG_LOG);
+
   J* req = AVRNoteNewRequest(F("dfu.status"));
   if(req != NULL){
     JAddBoolToObject(req, "stop", true);
-    AVRJAddStringToObject(req, "status", F("firmware update successful"));
+    if(success){
+      AVRJAddStringToObject(req, "status", F("firmware update successful"));
+    }else{
+      AVRJAddStringToObject(req, "status", F("firmware update unsuccessful"));
+    }
+    JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod);
     notecard.sendRequest(req);
   }
   else{
     return memoryError();
   }
+
   //return to continuous operation
   req = NoteNewRequest("hub.set");
   if(req != NULL){
@@ -529,7 +537,7 @@ void AVRNotecardCheckForUpdate(){
 
   // check if there is enough space to store the update
   if (!InternalStorage.open(updateSize)) {
-    AVRReturnNotecardFromDFU();
+    AVRReturnNotecardFromDFU(false);
     avrNotecardLog.println(F("There is not enough flash space to store the update. Can't continue with update."), ERROR_LOG);
     return;
   } 
@@ -557,7 +565,7 @@ void AVRNotecardCheckForUpdate(){
     payload = AVRRetrieveNotecardPayloadChunk(numOfErrors, offset, chunkSize);
     
     if (payload == NULL) {
-        AVRReturnNotecardFromDFU();
+        AVRReturnNotecardFromDFU(false);
         return;
     }
     // MD5 the chunk
@@ -579,7 +587,7 @@ void AVRNotecardCheckForUpdate(){
   }
 
   //after saving new update, stop dfu mode
-  AVRReturnNotecardFromDFU();
+  AVRReturnNotecardFromDFU(true);
 
   // Validate the MD5
   uint8_t md5Hash[NOTE_MD5_HASH_SIZE];
