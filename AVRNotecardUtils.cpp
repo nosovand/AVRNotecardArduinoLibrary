@@ -1,5 +1,5 @@
 #include "AVRNotecardUtils.hpp"
-#include <Arduino.h>
+#include "AVRNotecardLog.hpp"
 
 static const unsigned char pr2six[256] PROGMEM = {
     /* ASCII table */
@@ -68,4 +68,25 @@ int AVRUnBase64(char *bufplain) {
   *(bufout++) = '\0';
   nbytesdecoded -= (4 - nprbytes) & 3;
   return nbytesdecoded; 
+}
+
+void displayLoadingBar(int progress, uint8_t logMode) {
+  avrNotecardLog.print("[", logMode); 
+  int barLength = 20;
+  int completedBars = (progress * barLength) / 100;
+  
+  // Print the completed part of the loading bar
+  for (int i = 0; i < completedBars; i++) {
+    avrNotecardLog.print("#", logMode);
+  }
+  
+  // Print the remaining part of the loading bar
+  for (int i = completedBars; i < barLength; i++) {
+    avrNotecardLog.print("-", logMode);
+  }
+
+  // Print the percentage
+  avrNotecardLog.print("] ", logMode);
+  avrNotecardLog.print(progress, logMode);
+  avrNotecardLog.println("%", logMode);
 }
