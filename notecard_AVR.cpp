@@ -3,23 +3,42 @@
 #include "myBase64.h"
 #include "InternalStorageAVR.h"
 #include "memoryTest.h"
-#include "debugConsole.hpp"
+// #include "debugConsole.hpp"
+
 
 Notecard notecard;
 
 bool noteCardIsSyncing = false;
+
+uint8_t memoryError(){
+  avrNotecardLog.println(F("Not enough memory"), ERROR_LOG);
+  return RETURN_ERROR;
+}
 
 int AVRInitNotecardGPS(){
   /**
    * @brief initialize the notecard GPS
    * @return int 1 if success, 0 if error
   */
+  if(notecardParameters.gpsMode == GPS_OFF){
+    avrNotecardLog.println(F("Turning GPS off"), DEBUG_LOG);
+    J *req = NoteNewRequest("card.location.mode");
+    if (req==NULL){
+      memoryError();
+      return RETURN_ERROR;
+    }
+    AVRJAddStringToObject(req, "mode", F("off"));
+    notecard.sendRequest(req);
+    return RETURN_SUCCESS;
+  }
+  avrNotecardLog.println(F("Initializing GPS"), DEBUG_LOG);
   J *req = NoteNewRequest("card.location.mode");
   if (req==NULL){
+    memoryError();
     return RETURN_ERROR;
   }
   AVRJAddStringToObject(req, "mode", F("periodic"));
-  JAddNumberToObject(req, "seconds", GPS_CONNECTION_PERIOD_SEC);
+  JAddNumberToObject(req, "seconds", notecardParameters.gpsPeriod);
   notecard.sendRequest(req);
   return RETURN_SUCCESS;
 }
@@ -132,34 +151,36 @@ N_CJSON_PUBLIC(void) AVRJDeleteWithoutPayload(J *item)
     }
 }
 
-int AVRNotecardInit(bool debugMode){
+int AVRNotecardInit(){
     /**
      * @brief initialize the notecard
      * @param debugMode true if debug mode is on, false otherwise
      * @return int 1 if success, 0 if error
     */
-    // while (!usbSerial) {
+    // while (!notecardParameters.debugSerial) {
     //   ; // wait for serial port to connect. Needed for native USB
     // }
+    avrNotecardLog.println(F("Initializing notecard library"), RELEASE_LOG);
     //start notecard communication
-    notecard.begin(txRxPinsSerial, 9600);
-    if(debugMode && debugConsole.getConsoleMode() != DEBUG_CONSOLE_MODE_SPI && usbSerial != txRxPinsSerial){
+    notecard.begin(notecardParameters.notecardSerial, 9600);
+    avrNotecardLog.setMode(notecardParameters.libraryMode);
+    if(notecardParameters.notecardDebugStream && notecardParameters.debugSerial != notecardParameters.notecardSerial){
       // Initialize the Notecard debug port
-      debugConsole.println("Notecard debug stream was activated");
-      notecard.setDebugOutputStream(usbSerial);
+      avrNotecardLog.println(F("Notecard debug stream was activated"), DEBUG_LOG);
+      notecard.setDebugOutputStream(notecardParameters.debugSerial);
     }
     else{
-      debugConsole.println("Notecard debug stream was not activated");
+      avrNotecardLog.println(F("Notecard debug stream was not activated"), DEBUG_LOG);
     }
     J *req = notecard.newRequest("hub.set");
     if (req != NULL) {
       AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
       AVRJAddStringToObject(req, "mode", F("continuous"));
-      JAddNumberToObject(req, "inbound", 2); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
+      JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
       notecard.sendRequest(req);
     }
     else{
-      return RETURN_ERROR;
+      return memoryError();
     }
     req = AVRNoteNewRequest(F("card.dfu"));
     if (req != NULL){
@@ -168,7 +189,7 @@ int AVRNotecardInit(bool debugMode){
       notecard.sendRequest(req);
     }
     else{
-      return RETURN_ERROR;
+      return memoryError();
     }
 
     //TODO: Notify notecard of out current software verion
@@ -179,7 +200,7 @@ int AVRNotecardInit(bool debugMode){
       }
     }
     if(!AVRInitNotecardGPS()){
-      debugConsole.println(F("Not enough memory for gps init"));
+      memoryError();
     }
     return RETURN_SUCCESS;
 }
@@ -189,6 +210,7 @@ int AVRIsNotecardConnected(){
      * @brief check if the notecard is connected
      * @return int 1 if connected, 0 if not connected
     */
+    avrNotecardLog.println(F("Checking notecard connection"), DEBUG_LOG);
     char status[30];
     long time = 0;
     J* req = AVRNoteNewRequest(F("hub.sync.status"));
@@ -196,26 +218,34 @@ int AVRIsNotecardConnected(){
     if(req != NULL){
       syncRsp = notecard.requestAndResponse(req);
     }
+    else {
+      memoryError();
+    }
     char* tmpStatus = NULL;
     if(syncRsp != NULL){
       tmpStatus = JGetString(syncRsp, "status");
       strlcpy(status, tmpStatus, sizeof(status));
       time = JGetInt(syncRsp, "time");
-      debugConsole.print(F("Notecard status: "));
+      avrNotecardLog.print(F("Notecard status: "), DEBUG_LOG);
       if(time){
-        debugConsole.print("time: ");
-        debugConsole.println(time);
+        avrNotecardLog.print(F("time "), DEBUG_LOG);
+        avrNotecardLog.println(time, DEBUG_LOG);
       }
       else{
-        debugConsole.println(tmpStatus);
+        avrNotecardLog.println(tmpStatus, DEBUG_LOG);
       }
       notecard.deleteResponse(syncRsp);
     }
+    else{
+      memoryError();
+    }
     if(strstr(status, "{connected}") != NULL || strstr(status, "{sync-end}") != NULL || time != 0){
+      avrNotecardLog.println(F("Notecard is connected"), DEBUG_LOG);
       noteCardIsSyncing = false;
       return 1;
     }
     else{
+      avrNotecardLog.println(F("Notecard is not connected"), DEBUG_LOG);
       return 0;
     }
 }
@@ -225,17 +255,17 @@ int AVRStartNotecardSync(){
      * @brief start notecard sync
      * @return int 1 if success, 0 if error
     */
-  debugConsole.println(F("Starting notecard sync"));
+  avrNotecardLog.println(F("Starting notecard sync"), RELEASE_LOG);
   if(!noteCardIsSyncing){
       J* req = AVRNoteNewRequest(F("hub.sync"));
       if (req != NULL) {
       JAddBoolToObject(req, "sync", true);
       notecard.sendRequest(req);
       noteCardIsSyncing = true;
-    }
-    else {
-      return RETURN_ERROR;
-    }
+      }
+      else {
+        return memoryError();
+      }
   }
   return RETURN_SUCCESS;
 }
@@ -248,6 +278,7 @@ long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
    * @param imageMD5 pointer to the array to store the MD5 hash
    * @return available update size if mode is ready, 0 if error or no update available
   */
+  avrNotecardLog.println(F("Checking DFU for update"), DEBUG_LOG);
   long updateSize = 0;
   // set dfu.status to on to allow the notecard to download new firmware
   J* req = AVRNoteNewRequest(F("dfu.status"));
@@ -268,21 +299,21 @@ long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
       notecard.deleteResponse(rsp);
     }
     else {
-      return RETURN_ERROR;
+      return memoryError();
     }
   }
   else{
-    return RETURN_ERROR;
+    return memoryError();
   }
   return updateSize;
 }
 
-int AVRSetNotecardToDFU(int maxWaitTime_sec){
+int AVRSetNotecardToDFU(){
   /**
    * @brief set the notecard to DFU mode
-   * @param maxWaitTime_sec the maximum time to wait for the notecard to enter DFU mode
    * @return int 1 if success, 0 if error
   */
+  avrNotecardLog.println(F("Setting notecard to DFU"), DEBUG_LOG);
   //set notecard to dfu mode
   J* req = AVRNoteNewRequest(F("hub.set"));
   if(req != NULL){
@@ -290,16 +321,19 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
     notecard.sendRequest(req);
   }
   else{
-    return RETURN_ERROR;
+    return memoryError();
   }
   // Wait until we have successfully entered the mode.  The fact that this loop isn't
   // just an infinitely loop is simply defensive programming.  If for some odd reason
   // we don't enter DFU mode, we'll eventually come back here on the next update check
   bool inDFUMode = false;
   long DFUModeCheck = 0;
-  long DFUdelay = 2500;
-  long maxWaitTime = maxWaitTime_sec;
+  long DFUdelay = 3000;
+  long maxWaitTime = notecardParameters.dfuWait;
   while (!inDFUMode && DFUModeCheck < (maxWaitTime * 1000)) {
+    avrNotecardLog.print(F("Entering DFU: Waited for "), DEBUG_LOG);
+    avrNotecardLog.print(DFUModeCheck, DEBUG_LOG);
+    avrNotecardLog.println(F(" seconds"));
     //verify the notecard is in dfu mode using dfu.get
     req = AVRNoteNewRequest(F("dfu.get"));
     JAddNumberToObject(req, "length", 0);
@@ -321,10 +355,13 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
   // If we failed, leave DFU mode immediately
   if (!inDFUMode) {
       if (J *req = AVRNoteNewRequest(F("hub.set"))) {
-          AVRJAddStringToObject(req, "mode", F("dfu-completed"));
-          notecard.sendRequest(req);
+        if(req == NULL){
+          memoryError();
+        }
+        AVRJAddStringToObject(req, "mode", F("dfu-completed"));
+        notecard.sendRequest(req);
       }
-      debugConsole.println(F("Failed to enter DFU mode"));
+      avrNotecardLog.println(F("Failed to enter DFU mode"), ERROR_LOG);
       return RETURN_ERROR;
   }
   return RETURN_SUCCESS;
@@ -355,17 +392,18 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         if (((retry == max_retries - 1) && chunkSize > 1) || chunkSize < 1) {
             chunkSize = 1;
         }
-        debugConsole.print(F("dfy: reading chunk (offset: "));
-        debugConsole.print(offset);
-        debugConsole.print(F(" length: "));
-        debugConsole.print(chunkSize);
-        debugConsole.print(F(" try: "));
-        debugConsole.println(retry + 1);
+        avrNotecardLog.print(F("dfy: reading chunk (offset: "), DEBUG_LOG);
+        avrNotecardLog.print(offset, DEBUG_LOG);
+        avrNotecardLog.print(F(" length: "), DEBUG_LOG);
+        avrNotecardLog.print(chunkSize, DEBUG_LOG);
+        avrNotecardLog.print(F(" try: "), DEBUG_LOG);
+        avrNotecardLog.println(retry + 1, DEBUG_LOG);
+        avrNotecardLog.println(F(")"), DEBUG_LOG);
         // Request the next chunk from the notecard
         J* req = AVRNoteNewRequest(F("dfu.get"));
         if (req == NULL) {
-            debugConsole.println(F("dfu: insufficient memory\n"));
-            return NULL;
+          memoryError();
+          return NULL; 
         }
         JAddNumberToObject(req, "length", chunkSize);
         JAddNumberToObject(req, "offset", offset);
@@ -373,21 +411,21 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         // Requesting current chunk of data
         J* rsp = notecard.requestAndResponse(req);
         if (rsp == NULL) {
-            debugConsole.println(F("dfu: insufficient memory\n"));
+            memoryError();
             notecard.deleteResponse(rsp);
             return NULL;
         } else if (notecard.responseError(rsp)) {
             //with heighest probability means that we are requesting data that are out of update size
             //the chunk size will be smaller for the next retry
-            debugConsole.print(F("dfu: error on read: "));
-            debugConsole.println(JGetString(rsp, "err"));
+            avrNotecardLog.print(F("dfu: error on read: "), ERROR_LOG);
+            avrNotecardLog.println(JGetString(rsp, "err"), ERROR_LOG);
             notecard.deleteResponse(rsp);
             numOfErrors++;
             continue;
         } else {
             payload = JGetString(rsp, "payload");
             if (payload[0] == '\0') {
-                debugConsole.println(F("dfu: no payload"));
+                avrNotecardLog.println(F("dfu: no payload"), ERROR_LOG);
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 break;
@@ -399,22 +437,22 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
             NoteMD5HashString((uint8_t *)payload, num_bytes, chunkMD5, sizeof(chunkMD5));
             
             if (num_bytes < 0) {
-                debugConsole.println(F("dfu: can't decode payload\n"));
+                avrNotecardLog.println(F("dfu: can't decode payload\n"), ERROR_LOG);
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 continue;
             } else if (num_bytes != chunkSize) {
-                debugConsole.println(F("dfu: payload size mismatch\n"));
+                avrNotecardLog.println(F("dfu: payload size mismatch\n"), ERROR_LOG);
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 continue;
             } else if (strcmp(chunkMD5, expectedMD5)!=0){
-                debugConsole.println(F("dfu: MD5 mismatch\n"));
+                avrNotecardLog.println(F("dfu: MD5 mismatch\n"), ERROR_LOG);
                 notecard.deleteResponse(rsp);
                 payloadEmpty = true;
                 continue;
             } else {
-                debugConsole.println(F("dfu: payload decoded"));
+                avrNotecardLog.println(F("dfu: payload decoded"), DEBUG_LOG);
                 payloadEmpty = false;
                 //notecard.deleteResponse(rsp);
                 AVRJDeleteWithoutPayload(rsp);
@@ -435,6 +473,7 @@ int AVRReturnNotecardFromDFU(){
   * This function returns the notecard from DFU mode to continuous operation
   * @return int 0 if success, 1 if error
   */
+  avrNotecardLog.println(F("Returning from DFU"), DEBUG_LOG);
   J* req = AVRNoteNewRequest(F("dfu.status"));
   if(req != NULL){
     JAddBoolToObject(req, "stop", true);
@@ -442,7 +481,7 @@ int AVRReturnNotecardFromDFU(){
     notecard.sendRequest(req);
   }
   else{
-    return RETURN_ERROR;
+    return memoryError();
   }
   //return to continuous operation
   req = NoteNewRequest("hub.set");
@@ -451,7 +490,7 @@ int AVRReturnNotecardFromDFU(){
     notecard.sendRequest(req);
   }
   else{
-    return RETURN_ERROR;
+    return memoryError();
   }
   RETURN_SUCCESS;
 }
@@ -465,12 +504,11 @@ void AVRNotecardCheckForUpdate(){
 
   //check if notecard is connected to network
   if(!AVRIsNotecardConnected()){
-    debugConsole.println(F("Notecard is not synced, cannot check for update"));
+    avrNotecardLog.println(F("Notecard is not synced, cannot check for update"), RELEASE_LOG);
     AVRStartNotecardSync();
     return;
   }
 
-  debugConsole.println(F("Checking notecard dfu status"));
   //Serial.flush();
   // check if dfu mode is ready and if so, retrieve the update size
   char imageMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
@@ -478,26 +516,25 @@ void AVRNotecardCheckForUpdate(){
   
   // if updateSize is zero, the update is not ready
   if (!updateSize) {
-    debugConsole.println(F("No update available"));
+    avrNotecardLog.println(F("No update available"), RELEASE_LOG);
     return;
   }
 
   //put notecard in dfu mode with max wait time 120 seconds
-  debugConsole.println(F("putting notecard in dfu mode"));
-  if(!AVRSetNotecardToDFU(120)){
-    debugConsole.println(F("Could not enter dfu"));
+  if(!AVRSetNotecardToDFU()){
+    avrNotecardLog.println(F("Could not enter dfu"), ERROR_LOG);
     return;
   }
 
   // check if there is enough space to store the update
   if (!InternalStorage.open(updateSize)) {
     AVRReturnNotecardFromDFU();
-    debugConsole.println(F("There is not enough flash space to store the update. Can't continue with update."));
+    avrNotecardLog.println(F("There is not enough flash space to store the update. Can't continue with update."), ERROR_LOG);
     return;
   } 
 
   bool payloadEmpty = false;
-  int chunkSize = 256;
+  int chunkSize = notecardParameters.chunckSize;
   long offset = 0;
   char* payload;
   int maxNumOfErrors = 10;
@@ -530,8 +567,8 @@ void AVRNotecardCheckForUpdate(){
     //free memory
     delete[] payload;
     // Move to next chunk
-    debugConsole.print(F("dfu: chunk successfully saved to flash, offset: "));
-    debugConsole.println(offset);
+    avrNotecardLog.print(F("dfu: chunk successfully saved to flash, offset: "),  DEBUG_LOG);
+    avrNotecardLog.println(offset, DEBUG_LOG);
     //notecard.logDebugf("dfu: successfully transferred offset:%d, offset");
   }
 
@@ -543,18 +580,18 @@ void AVRNotecardCheckForUpdate(){
   NoteMD5Final(md5Hash, &md5Context);
   char md5HashString[NOTE_MD5_HASH_STRING_SIZE];
   NoteMD5HashToString(md5Hash, md5HashString, sizeof(md5HashString));
-  debugConsole.print(F("dfu:    MD5 of image:"));
-  debugConsole.println(imageMD5);
-  debugConsole.print(F("dfu: MD5 of download:"));
-  debugConsole.println(md5HashString);
+  avrNotecardLog.print(F("dfu:    MD5 of image:"),  DEBUG_LOG);
+  avrNotecardLog.println(imageMD5,  DEBUG_LOG);
+  avrNotecardLog.print(F("dfu: MD5 of download:"),  DEBUG_LOG);
+  avrNotecardLog.println(md5HashString,  DEBUG_LOG);
   if (strcmp(imageMD5, md5HashString) != 0) {
-      notecard.logDebugf("Error: MD5 MISMATCH - ABANDONING DFU\n");
+      avrNotecardLog.println(F("MD5 MISMATCH - ABANDONING DFU\n"), ERROR_LOG);
       return;
   }
 
   //close flash
   InternalStorage.close();
-  debugConsole.println(F("Sketch update apply and reset."));
+  avrNotecardLog.println(F("Sketch update apply and reset."), RELEASE_LOG);
   //Serial.flush();
   //apply update (swap flash)
   InternalStorage.apply(); // this doesn't return
