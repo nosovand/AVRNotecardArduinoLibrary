@@ -8,14 +8,10 @@
  |-------------------------------------------------------------------------*/
 
 #include <Notecard.h>
-#include "AVRNotecardParameters.hpp"
 #include "AVRNotecardLog.hpp"
 
 #define RETURN_SUCCESS 1
 #define RETURN_ERROR 0
-#define NOTE_PRODUCT_UID F("com.gmail.work.kp.an:firsttest")
-#define usbSerial Serial
-#define txRxPinsSerial Serial
 #define DEBUG_MODE true
 #define RELEASE_MODE false
 #define ALARM_A F("Alarm A")
@@ -23,16 +19,13 @@
 
 
 extern Notecard notecard; //test
-extern AVRNotecardParameters notecardParameters;
 
-#define GPS_CONNECTION_PERIOD_SEC 60
-
-int AVRNotecardInit(uint8_t logMode = 2, bool debugStream = false);
+int AVRNotecardInit();
 int AVRInitNotecardGPS();
 int AVRStartNotecardSync();
 int AVRIsNotecardConnected();
 long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5);
-int AVRSetNotecardToDFU(int maxWaitTime_sec);
+int AVRSetNotecardToDFU();
 int AVRReturnNotecardFromDFU();
 
 char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize);

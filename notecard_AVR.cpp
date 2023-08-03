@@ -7,9 +7,6 @@
 
 
 Notecard notecard;
-AVRNotecardParameters notecardParameters{
-  0,
-};
 
 bool noteCardIsSyncing = false;
 
@@ -23,13 +20,25 @@ int AVRInitNotecardGPS(){
    * @brief initialize the notecard GPS
    * @return int 1 if success, 0 if error
   */
+  if(notecardParameters.gpsMode == GPS_OFF){
+    avrNotecardLog.println(F("Turning GPS off"), DEBUG_LOG);
+    J *req = NoteNewRequest("card.location.mode");
+    if (req==NULL){
+      memoryError();
+      return RETURN_ERROR;
+    }
+    AVRJAddStringToObject(req, "mode", F("off"));
+    notecard.sendRequest(req);
+    return RETURN_SUCCESS;
+  }
   avrNotecardLog.println(F("Initializing GPS"), DEBUG_LOG);
   J *req = NoteNewRequest("card.location.mode");
   if (req==NULL){
+    memoryError();
     return RETURN_ERROR;
   }
   AVRJAddStringToObject(req, "mode", F("periodic"));
-  JAddNumberToObject(req, "seconds", GPS_CONNECTION_PERIOD_SEC);
+  JAddNumberToObject(req, "seconds", notecardParameters.gpsPeriod);
   notecard.sendRequest(req);
   return RETURN_SUCCESS;
 }
@@ -142,23 +151,23 @@ N_CJSON_PUBLIC(void) AVRJDeleteWithoutPayload(J *item)
     }
 }
 
-int AVRNotecardInit(uint8_t logMode, bool debugStream){
+int AVRNotecardInit(){
     /**
      * @brief initialize the notecard
      * @param debugMode true if debug mode is on, false otherwise
      * @return int 1 if success, 0 if error
     */
-    // while (!usbSerial) {
+    // while (!notecardParameters.debugSerial) {
     //   ; // wait for serial port to connect. Needed for native USB
     // }
     avrNotecardLog.println(F("Initializing notecard library"), RELEASE_LOG);
     //start notecard communication
-    notecard.begin(txRxPinsSerial, 9600);
-    avrNotecardLog.setMode(logMode);
-    if(debugStream && usbSerial != txRxPinsSerial){
+    notecard.begin(notecardParameters.notecardSerial, 9600);
+    avrNotecardLog.setMode(notecardParameters.libraryMode);
+    if(notecardParameters.notecardDebugStream && notecardParameters.debugSerial != notecardParameters.notecardSerial){
       // Initialize the Notecard debug port
       avrNotecardLog.println(F("Notecard debug stream was activated"), DEBUG_LOG);
-      notecard.setDebugOutputStream(usbSerial);
+      notecard.setDebugOutputStream(notecardParameters.debugSerial);
     }
     else{
       avrNotecardLog.println(F("Notecard debug stream was not activated"), DEBUG_LOG);
@@ -167,6 +176,7 @@ int AVRNotecardInit(uint8_t logMode, bool debugStream){
     if (req != NULL) {
       AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
       AVRJAddStringToObject(req, "mode", F("continuous"));
+      JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
       notecard.sendRequest(req);
     }
     else{
@@ -298,10 +308,9 @@ long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
   return updateSize;
 }
 
-int AVRSetNotecardToDFU(int maxWaitTime_sec){
+int AVRSetNotecardToDFU(){
   /**
    * @brief set the notecard to DFU mode
-   * @param maxWaitTime_sec the maximum time to wait for the notecard to enter DFU mode
    * @return int 1 if success, 0 if error
   */
   avrNotecardLog.println(F("Setting notecard to DFU"), DEBUG_LOG);
@@ -320,7 +329,7 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
   bool inDFUMode = false;
   long DFUModeCheck = 0;
   long DFUdelay = 3000;
-  long maxWaitTime = maxWaitTime_sec;
+  long maxWaitTime = notecardParameters.dfuWait;
   while (!inDFUMode && DFUModeCheck < (maxWaitTime * 1000)) {
     avrNotecardLog.print(F("Entering DFU: Waited for "), DEBUG_LOG);
     avrNotecardLog.print(DFUModeCheck, DEBUG_LOG);
@@ -493,26 +502,10 @@ void AVRNotecardCheckForUpdate(){
   * @return void
   */
 
-  //start notecard sync and wait if it connects or not for one minute
-  //if it does not connect, return
-
-  //Serial.flush();
-  int maxWaitTime_sec = 120;
-  int waitPeriod_sec = 20;
-  AVRStartNotecardSync();
-  avrNotecardLog.print(F("Waiting for connection"), RELEASE_LOG);
-  for(int i = 0; i < maxWaitTime_sec; i+=waitPeriod_sec){
-    delay(waitPeriod_sec*1000);
-    avrNotecardLog.print(F("Time waited: "), DEBUG_LOG);
-    avrNotecardLog.println(i+waitPeriod_sec, DEBUG_LOG);
-    if(AVRIsNotecardConnected()){
-      break;
-    }
-    //usbSerial.flush();
-    //txRxPinsSerial.flush();
-  }
+  //check if notecard is connected to network
   if(!AVRIsNotecardConnected()){
-    avrNotecardLog.println(F("Waited too long for connection, return"), RELEASE_LOG);
+    avrNotecardLog.println(F("Notecard is not synced, cannot check for update"), RELEASE_LOG);
+    AVRStartNotecardSync();
     return;
   }
 
@@ -528,7 +521,7 @@ void AVRNotecardCheckForUpdate(){
   }
 
   //put notecard in dfu mode with max wait time 120 seconds
-  if(!AVRSetNotecardToDFU(120)){
+  if(!AVRSetNotecardToDFU()){
     avrNotecardLog.println(F("Could not enter dfu"), ERROR_LOG);
     return;
   }
@@ -541,7 +534,7 @@ void AVRNotecardCheckForUpdate(){
   } 
 
   bool payloadEmpty = false;
-  int chunkSize = 256;
+  int chunkSize = notecardParameters.chunckSize;
   long offset = 0;
   char* payload;
   int maxNumOfErrors = 10;
