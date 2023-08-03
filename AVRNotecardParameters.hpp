@@ -26,7 +26,7 @@
 #define GPS_CONNECTION_PERIOD_5_MIN 300
 #define GPS_CONNECTION_PERIOD_10_MIN 600
 
-#define GPS_CONNECTION_PERIOD_SEC 60
+//#define GPS_CONNECTION_PERIOD_SEC 60
 
 struct AVRNotecardParameters{
   uint8_t libraryMode;

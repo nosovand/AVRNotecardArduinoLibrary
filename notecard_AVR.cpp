@@ -20,13 +20,25 @@ int AVRInitNotecardGPS(){
    * @brief initialize the notecard GPS
    * @return int 1 if success, 0 if error
   */
+  if(notecardParameters.gpsMode == GPS_OFF){
+    avrNotecardLog.println(F("Turning GPS off"), DEBUG_LOG);
+    J *req = NoteNewRequest("card.location.mode");
+    if (req==NULL){
+      memoryError();
+      return RETURN_ERROR;
+    }
+    AVRJAddStringToObject(req, "mode", F("off"));
+    notecard.sendRequest(req);
+    return RETURN_SUCCESS;
+  }
   avrNotecardLog.println(F("Initializing GPS"), DEBUG_LOG);
   J *req = NoteNewRequest("card.location.mode");
   if (req==NULL){
+    memoryError();
     return RETURN_ERROR;
   }
   AVRJAddStringToObject(req, "mode", F("periodic"));
-  JAddNumberToObject(req, "seconds", GPS_CONNECTION_PERIOD_SEC);
+  JAddNumberToObject(req, "seconds", notecardParameters.gpsPeriod);
   notecard.sendRequest(req);
   return RETURN_SUCCESS;
 }
