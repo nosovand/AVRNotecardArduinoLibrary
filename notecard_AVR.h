@@ -9,6 +9,7 @@
 
 #include <Notecard.h>
 #include "AVRNotecardParameters.hpp"
+#include "AVRNotecardLog.hpp"
 
 #define RETURN_SUCCESS 1
 #define RETURN_ERROR 0

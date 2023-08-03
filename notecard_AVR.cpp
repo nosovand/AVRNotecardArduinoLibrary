@@ -4,7 +4,7 @@
 #include "InternalStorageAVR.h"
 #include "memoryTest.h"
 // #include "debugConsole.hpp"
-#include "AVRNotecardLog.hpp"
+
 
 Notecard notecard;
 AVRNotecardParameters notecardParameters{
@@ -200,6 +200,7 @@ int AVRIsNotecardConnected(){
      * @brief check if the notecard is connected
      * @return int 1 if connected, 0 if not connected
     */
+    avrNotecardLog.println(F("Checking notecard connection"), DEBUG_LOG);
     char status[30];
     long time = 0;
     J* req = AVRNoteNewRequest(F("hub.sync.status"));
@@ -229,10 +230,12 @@ int AVRIsNotecardConnected(){
       memoryError();
     }
     if(strstr(status, "{connected}") != NULL || strstr(status, "{sync-end}") != NULL || time != 0){
+      avrNotecardLog.println(F("Notecard is connected"), DEBUG_LOG);
       noteCardIsSyncing = false;
       return 1;
     }
     else{
+      avrNotecardLog.println(F("Notecard is not connected"), DEBUG_LOG);
       return 0;
     }
 }
@@ -265,6 +268,7 @@ long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
    * @param imageMD5 pointer to the array to store the MD5 hash
    * @return available update size if mode is ready, 0 if error or no update available
   */
+  avrNotecardLog.println(F("Checking DFU for update"), DEBUG_LOG);
   long updateSize = 0;
   // set dfu.status to on to allow the notecard to download new firmware
   J* req = AVRNoteNewRequest(F("dfu.status"));
@@ -300,6 +304,7 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
    * @param maxWaitTime_sec the maximum time to wait for the notecard to enter DFU mode
    * @return int 1 if success, 0 if error
   */
+  avrNotecardLog.println(F("Setting notecard to DFU"), DEBUG_LOG);
   //set notecard to dfu mode
   J* req = AVRNoteNewRequest(F("hub.set"));
   if(req != NULL){
@@ -314,9 +319,12 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
   // we don't enter DFU mode, we'll eventually come back here on the next update check
   bool inDFUMode = false;
   long DFUModeCheck = 0;
-  long DFUdelay = 2500;
+  long DFUdelay = 3000;
   long maxWaitTime = maxWaitTime_sec;
   while (!inDFUMode && DFUModeCheck < (maxWaitTime * 1000)) {
+    avrNotecardLog.print(F("Entering DFU: Waited for "), DEBUG_LOG);
+    avrNotecardLog.print(DFUModeCheck, DEBUG_LOG);
+    avrNotecardLog.println(F(" seconds"));
     //verify the notecard is in dfu mode using dfu.get
     req = AVRNoteNewRequest(F("dfu.get"));
     JAddNumberToObject(req, "length", 0);
@@ -456,6 +464,7 @@ int AVRReturnNotecardFromDFU(){
   * This function returns the notecard from DFU mode to continuous operation
   * @return int 0 if success, 1 if error
   */
+  avrNotecardLog.println(F("Returning from DFU"), DEBUG_LOG);
   J* req = AVRNoteNewRequest(F("dfu.status"));
   if(req != NULL){
     JAddBoolToObject(req, "stop", true);
@@ -507,7 +516,6 @@ void AVRNotecardCheckForUpdate(){
     return;
   }
 
-  avrNotecardLog.println(F("Checking notecard dfu status"), DEBUG_LOG);
   //Serial.flush();
   // check if dfu mode is ready and if so, retrieve the update size
   char imageMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
@@ -520,7 +528,6 @@ void AVRNotecardCheckForUpdate(){
   }
 
   //put notecard in dfu mode with max wait time 120 seconds
-  avrNotecardLog.println(F("putting notecard in dfu mode"), DEBUG_LOG);
   if(!AVRSetNotecardToDFU(120)){
     avrNotecardLog.println(F("Could not enter dfu"), ERROR_LOG);
     return;
@@ -585,7 +592,7 @@ void AVRNotecardCheckForUpdate(){
   avrNotecardLog.print(F("dfu: MD5 of download:"),  DEBUG_LOG);
   avrNotecardLog.println(md5HashString,  DEBUG_LOG);
   if (strcmp(imageMD5, md5HashString) != 0) {
-      avrNotecardLog.println(F("Error: MD5 MISMATCH - ABANDONING DFU\n"), ERROR_LOG);
+      avrNotecardLog.println(F("MD5 MISMATCH - ABANDONING DFU\n"), ERROR_LOG);
       return;
   }
 
