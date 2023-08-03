@@ -24,7 +24,7 @@ int AVRNotecardInit();
 int AVRInitNotecardGPS();
 int AVRStartNotecardSync();
 int AVRIsNotecardConnected();
-long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5);
+long AVRCheckNotecardDFUMode(long maxUpdateSize, char* imageMD5);
 int AVRSetNotecardToDFU();
 int AVRReturnNotecardFromDFU();
 

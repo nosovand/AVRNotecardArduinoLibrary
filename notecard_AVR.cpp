@@ -270,7 +270,7 @@ int AVRStartNotecardSync(){
   return RETURN_SUCCESS;
 }
 
-long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
+long AVRCheckNotecardDFUMode(long maxUpdateSize, char* imageMD5) {
   /**
    * Checks the notecard DFU mode and returns the size of the update if one is available
    * @brief check the notecard DFU mode
@@ -512,7 +512,7 @@ void AVRNotecardCheckForUpdate(){
   //Serial.flush();
   // check if dfu mode is ready and if so, retrieve the update size
   char imageMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
-  long updateSize = AVRCheckNotecatdDFUMode(100000, imageMD5);
+  long updateSize = AVRCheckNotecardDFUMode(100000, imageMD5);
   
   // if updateSize is zero, the update is not ready
   if (!updateSize) {
