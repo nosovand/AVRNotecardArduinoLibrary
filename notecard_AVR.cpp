@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "notecard_AVR.h"
-#include "myBase64.h"
+#include "AVRNotecardUtils.hpp"
 #include "InternalStorageAVR.h"
 #include "memoryTest.h"
 // #include "debugConsole.hpp"
