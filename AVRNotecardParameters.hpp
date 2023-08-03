@@ -26,7 +26,7 @@
 #define GPS_CONNECTION_PERIOD_5_MIN 300
 #define GPS_CONNECTION_PERIOD_10_MIN 600
 
-//#define GPS_CONNECTION_PERIOD_SEC 60
+#define DFU_WAIT_2_MIN 120
 
 struct AVRNotecardParameters{
   uint8_t libraryMode;
@@ -35,6 +35,7 @@ struct AVRNotecardParameters{
   HardwareSerial& debugSerial;
   bool gpsMode;
   int gpsPeriod; 
+  int dfuWait;
 };
 
 extern AVRNotecardParameters notecardParameters;

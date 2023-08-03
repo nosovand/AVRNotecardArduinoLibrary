@@ -307,10 +307,9 @@ long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
   return updateSize;
 }
 
-int AVRSetNotecardToDFU(int maxWaitTime_sec){
+int AVRSetNotecardToDFU(){
   /**
    * @brief set the notecard to DFU mode
-   * @param maxWaitTime_sec the maximum time to wait for the notecard to enter DFU mode
    * @return int 1 if success, 0 if error
   */
   avrNotecardLog.println(F("Setting notecard to DFU"), DEBUG_LOG);
@@ -329,7 +328,7 @@ int AVRSetNotecardToDFU(int maxWaitTime_sec){
   bool inDFUMode = false;
   long DFUModeCheck = 0;
   long DFUdelay = 3000;
-  long maxWaitTime = maxWaitTime_sec;
+  long maxWaitTime = notecardParameters.dfuWait;
   while (!inDFUMode && DFUModeCheck < (maxWaitTime * 1000)) {
     avrNotecardLog.print(F("Entering DFU: Waited for "), DEBUG_LOG);
     avrNotecardLog.print(DFUModeCheck, DEBUG_LOG);
@@ -537,7 +536,7 @@ void AVRNotecardCheckForUpdate(){
   }
 
   //put notecard in dfu mode with max wait time 120 seconds
-  if(!AVRSetNotecardToDFU(120)){
+  if(!AVRSetNotecardToDFU()){
     avrNotecardLog.println(F("Could not enter dfu"), ERROR_LOG);
     return;
   }

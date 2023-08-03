@@ -8,4 +8,5 @@ AVRNotecardParameters notecardParameters{
   DEBUG_SERIAL,
   GPS_ON,
   GPS_CONNECTION_PERIOD_60_SEC,
+  DFU_WAIT_2_MIN,
 };

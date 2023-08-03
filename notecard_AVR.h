@@ -25,7 +25,7 @@ int AVRInitNotecardGPS();
 int AVRStartNotecardSync();
 int AVRIsNotecardConnected();
 long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5);
-int AVRSetNotecardToDFU(int maxWaitTime_sec);
+int AVRSetNotecardToDFU();
 int AVRReturnNotecardFromDFU();
 
 char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize);
