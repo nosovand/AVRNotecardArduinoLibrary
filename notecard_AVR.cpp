@@ -172,20 +172,20 @@ int AVRNotecardInit(){
     else{
       avrNotecardLog.println(F("Notecard debug stream was not activated"), DEBUG_LOG);
     }
-    J *req = notecard.newRequest("hub.set");
-    if (req != NULL) {
-      AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
-      AVRJAddStringToObject(req, "mode", F("continuous"));
-      JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
+    J * req = AVRNoteNewRequest(F("card.dfu"));
+    if (req != NULL){
+      AVRJAddStringToObject(req, "name", F("-"));
+      JAddBoolToObject(req, "off", true);
       notecard.sendRequest(req);
     }
     else{
       return memoryError();
     }
-    req = AVRNoteNewRequest(F("card.dfu"));
-    if (req != NULL){
-      AVRJAddStringToObject(req, "name", F("-"));
-      JAddBoolToObject(req, "off", true);
+    req = notecard.newRequest("hub.set");
+    if (req != NULL) {
+      AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
+      AVRJAddStringToObject(req, "mode", F("continuous"));
+      JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
       notecard.sendRequest(req);
     }
     else{
