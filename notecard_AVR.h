@@ -22,7 +22,6 @@
 
 
 extern Notecard notecard; //test
-extern AVRNotecardParameters notecardParameters;
 
 #define GPS_CONNECTION_PERIOD_SEC 60
 

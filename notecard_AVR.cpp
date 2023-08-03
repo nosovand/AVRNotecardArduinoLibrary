@@ -6,9 +6,6 @@
 #include "debugConsole.hpp"
 
 Notecard notecard;
-AVRNotecardParameters notecardParameters{
-  0,
-};
 
 bool noteCardIsSyncing = false;
 
