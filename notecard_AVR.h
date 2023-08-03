@@ -8,7 +8,6 @@
  |-------------------------------------------------------------------------*/
 
 #include <Notecard.h>
-#include "AVRNotecardParameters.hpp"
 #include "AVRNotecardLog.hpp"
 
 #define RETURN_SUCCESS 1
@@ -26,7 +25,7 @@ extern Notecard notecard; //test
 
 #define GPS_CONNECTION_PERIOD_SEC 60
 
-int AVRNotecardInit(uint8_t logMode = 2, bool debugStream = false);
+int AVRNotecardInit();
 int AVRInitNotecardGPS();
 int AVRStartNotecardSync();
 int AVRIsNotecardConnected();

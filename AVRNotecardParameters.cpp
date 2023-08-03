@@ -2,6 +2,6 @@
 #include "AVRNotecardParameters.hpp"
 
 AVRNotecardParameters notecardParameters{
-  0,
+  NOTECARD_LOG_RELEASE_MESSSAGES,
   NOTECARD_DEBUG_STREAM_OFF,
 };

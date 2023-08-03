@@ -139,7 +139,7 @@ N_CJSON_PUBLIC(void) AVRJDeleteWithoutPayload(J *item)
     }
 }
 
-int AVRNotecardInit(uint8_t logMode, bool debugStream){
+int AVRNotecardInit(){
     /**
      * @brief initialize the notecard
      * @param debugMode true if debug mode is on, false otherwise
@@ -151,8 +151,8 @@ int AVRNotecardInit(uint8_t logMode, bool debugStream){
     avrNotecardLog.println(F("Initializing notecard library"), RELEASE_LOG);
     //start notecard communication
     notecard.begin(txRxPinsSerial, 9600);
-    avrNotecardLog.setMode(logMode);
-    if(debugStream && usbSerial != txRxPinsSerial){
+    avrNotecardLog.setMode(notecardParameters.libraryMode);
+    if(notecardParameters.notecardDebugStream && usbSerial != txRxPinsSerial){
       // Initialize the Notecard debug port
       avrNotecardLog.println(F("Notecard debug stream was activated"), DEBUG_LOG);
       notecard.setDebugOutputStream(usbSerial);
