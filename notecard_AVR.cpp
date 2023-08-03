@@ -417,8 +417,8 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         } else if (notecard.responseError(rsp)) {
             //with heighest probability means that we are requesting data that are out of update size
             //the chunk size will be smaller for the next retry
-            avrNotecardLog.print(F("dfu: error on read: "), ERROR_LOG);
-            avrNotecardLog.println(JGetString(rsp, "err"), ERROR_LOG);
+            avrNotecardLog.print(F("dfu: error on read: "), DEBUG_LOG);
+            avrNotecardLog.println(JGetString(rsp, "err"), DEBUG_LOG);
             notecard.deleteResponse(rsp);
             numOfErrors++;
             continue;
@@ -519,6 +519,7 @@ void AVRNotecardCheckForUpdate(){
     avrNotecardLog.println(F("No update available"), RELEASE_LOG);
     return;
   }
+  avrNotecardLog.println(F("New update available"), RELEASE_LOG);
 
   //put notecard in dfu mode with max wait time 120 seconds
   if(!AVRSetNotecardToDFU()){
@@ -532,6 +533,8 @@ void AVRNotecardCheckForUpdate(){
     avrNotecardLog.println(F("There is not enough flash space to store the update. Can't continue with update."), ERROR_LOG);
     return;
   } 
+
+  avrNotecardLog.println(F("Beginning device update"), RELEASE_LOG);
 
   bool payloadEmpty = false;
   int chunkSize = notecardParameters.chunckSize;
