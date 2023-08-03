@@ -12,8 +12,8 @@
 
 #define RETURN_SUCCESS 1
 #define RETURN_ERROR 0
-#define usbSerial Serial
-#define txRxPinsSerial Serial
+//#define usbSerial Serial
+//#define txRxPinsSerial Serial
 #define DEBUG_MODE true
 #define RELEASE_MODE false
 #define ALARM_A F("Alarm A")

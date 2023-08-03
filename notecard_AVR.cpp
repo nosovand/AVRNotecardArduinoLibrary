@@ -145,17 +145,17 @@ int AVRNotecardInit(){
      * @param debugMode true if debug mode is on, false otherwise
      * @return int 1 if success, 0 if error
     */
-    // while (!usbSerial) {
+    // while (!notecardParameters.debugSerial) {
     //   ; // wait for serial port to connect. Needed for native USB
     // }
     avrNotecardLog.println(F("Initializing notecard library"), RELEASE_LOG);
     //start notecard communication
-    notecard.begin(txRxPinsSerial, 9600);
+    notecard.begin(notecardParameters.notecardSerial, 9600);
     avrNotecardLog.setMode(notecardParameters.libraryMode);
-    if(notecardParameters.notecardDebugStream && usbSerial != txRxPinsSerial){
+    if(notecardParameters.notecardDebugStream && notecardParameters.debugSerial != notecardParameters.notecardSerial){
       // Initialize the Notecard debug port
       avrNotecardLog.println(F("Notecard debug stream was activated"), DEBUG_LOG);
-      notecard.setDebugOutputStream(usbSerial);
+      notecard.setDebugOutputStream(notecardParameters.debugSerial);
     }
     else{
       avrNotecardLog.println(F("Notecard debug stream was not activated"), DEBUG_LOG);
@@ -505,8 +505,8 @@ void AVRNotecardCheckForUpdate(){
     if(AVRIsNotecardConnected()){
       break;
     }
-    //usbSerial.flush();
-    //txRxPinsSerial.flush();
+    //notecardParameters.debugSerial.flush();
+    //notecardParameters.notecardSerial.flush();
   }
   if(!AVRIsNotecardConnected()){
     avrNotecardLog.println(F("Waited too long for connection, return"), RELEASE_LOG);
