@@ -519,6 +519,7 @@ void AVRNotecardCheckForUpdate(){
     avrNotecardLog.println(F("No update available"), RELEASE_LOG);
     return;
   }
+  avrNotecardLog.println(F("New update available"), RELEASE_LOG);
 
   //put notecard in dfu mode with max wait time 120 seconds
   if(!AVRSetNotecardToDFU()){
@@ -532,6 +533,8 @@ void AVRNotecardCheckForUpdate(){
     avrNotecardLog.println(F("There is not enough flash space to store the update. Can't continue with update."), ERROR_LOG);
     return;
   } 
+
+  avrNotecardLog.println(F("Beginning device update"), RELEASE_LOG);
 
   bool payloadEmpty = false;
   int chunkSize = notecardParameters.chunckSize;
