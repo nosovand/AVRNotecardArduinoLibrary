@@ -18,11 +18,23 @@
 #define NOTE_SERIAL Serial
 #define DEBUG_SERIAL Serial
 
+#define GPS_ON true
+#define GPS_OFF false
+
+#define GPS_CONNECTION_PERIOD_30_SEC 30
+#define GPS_CONNECTION_PERIOD_60_SEC 60
+#define GPS_CONNECTION_PERIOD_5_MIN 300
+#define GPS_CONNECTION_PERIOD_10_MIN 600
+
+#define GPS_CONNECTION_PERIOD_SEC 60
+
 struct AVRNotecardParameters{
   uint8_t libraryMode;
   bool notecardDebugStream;
   HardwareSerial& notecardSerial;
   HardwareSerial& debugSerial;
+  bool gpsMode;
+  int gpsPeriod; 
 };
 
 extern AVRNotecardParameters notecardParameters;

@@ -22,8 +22,6 @@
 
 extern Notecard notecard; //test
 
-#define GPS_CONNECTION_PERIOD_SEC 60
-
 int AVRNotecardInit();
 int AVRInitNotecardGPS();
 int AVRStartNotecardSync();

@@ -6,4 +6,6 @@ AVRNotecardParameters notecardParameters{
   NOTECARD_DEBUG_STREAM_OFF,
   NOTE_SERIAL,
   DEBUG_SERIAL,
+  GPS_ON,
+  GPS_CONNECTION_PERIOD_60_SEC,
 };
