@@ -176,6 +176,7 @@ int AVRNotecardInit(){
     if (req != NULL) {
       AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
       AVRJAddStringToObject(req, "mode", F("continuous"));
+      JAddNumberToObject(req, "inbound", 2); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
       notecard.sendRequest(req);
     }
     else{
@@ -501,26 +502,10 @@ void AVRNotecardCheckForUpdate(){
   * @return void
   */
 
-  //start notecard sync and wait if it connects or not for one minute
-  //if it does not connect, return
-
-  //Serial.flush();
-  int maxWaitTime_sec = 120;
-  int waitPeriod_sec = 20;
-  AVRStartNotecardSync();
-  avrNotecardLog.print(F("Waiting for connection"), RELEASE_LOG);
-  for(int i = 0; i < maxWaitTime_sec; i+=waitPeriod_sec){
-    delay(waitPeriod_sec*1000);
-    avrNotecardLog.print(F("Time waited: "), DEBUG_LOG);
-    avrNotecardLog.println(i+waitPeriod_sec, DEBUG_LOG);
-    if(AVRIsNotecardConnected()){
-      break;
-    }
-    //notecardParameters.debugSerial.flush();
-    //notecardParameters.notecardSerial.flush();
-  }
+  //check if notecard is connected to network
   if(!AVRIsNotecardConnected()){
-    avrNotecardLog.println(F("Waited too long for connection, return"), RELEASE_LOG);
+    debugConsole.println(F("Notecard is not synced, cannot check for update"));
+    AVRStartNotecardSync();
     return;
   }
 
