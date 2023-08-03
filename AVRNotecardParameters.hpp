@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #define NOTECARD_LOG_EVERYTHING 0
 #define NOTECARD_LOG_DEBUG_MESSSAGES 1
 #define NOTECARD_LOG_RELEASE_MESSSAGES 2
@@ -11,9 +13,16 @@
 #define NOTECARD_DEBUG_STREAM_ON true
 #define NOTECARD_DEBUG_STREAM_OFF false
 
+#define NOTE_PRODUCT_UID F("com.gmail.work.kp.an:firsttest")
+
+#define NOTE_SERIAL Serial
+#define DEBUG_SERIAL Serial
+
 struct AVRNotecardParameters{
   uint8_t libraryMode;
   bool notecardDebugStream;
+  HardwareSerial& notecardSerial;
+  HardwareSerial& debugSerial;
 };
 
 extern AVRNotecardParameters notecardParameters;

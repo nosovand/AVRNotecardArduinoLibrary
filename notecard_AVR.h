@@ -12,7 +12,6 @@
 
 #define RETURN_SUCCESS 1
 #define RETURN_ERROR 0
-#define NOTE_PRODUCT_UID F("com.gmail.work.kp.an:firsttest")
 #define usbSerial Serial
 #define txRxPinsSerial Serial
 #define DEBUG_MODE true
