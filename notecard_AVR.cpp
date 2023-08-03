@@ -417,8 +417,8 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         } else if (notecard.responseError(rsp)) {
             //with heighest probability means that we are requesting data that are out of update size
             //the chunk size will be smaller for the next retry
-            avrNotecardLog.print(F("dfu: error on read: "), ERROR_LOG);
-            avrNotecardLog.println(JGetString(rsp, "err"), ERROR_LOG);
+            avrNotecardLog.print(F("dfu: error on read: "), DEBUG_LOG);
+            avrNotecardLog.println(JGetString(rsp, "err"), DEBUG_LOG);
             notecard.deleteResponse(rsp);
             numOfErrors++;
             continue;
