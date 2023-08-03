@@ -501,7 +501,7 @@ void AVRNotecardCheckForUpdate(){
   * @brief Checks for an update
   * @return void
   */
-
+  avrNotecardLog.println(F("Checking for update"), RELEASE_LOG);
   //check if notecard is connected to network
   if(!AVRIsNotecardConnected()){
     avrNotecardLog.println(F("Notecard is not synced, cannot check for update"), RELEASE_LOG);
