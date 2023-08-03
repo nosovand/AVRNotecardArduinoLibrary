@@ -332,7 +332,7 @@ int AVRSetNotecardToDFU(){
   long maxWaitTime = notecardParameters.dfuWait;
   while (!inDFUMode && DFUModeCheck < (maxWaitTime * 1000)) {
     avrNotecardLog.print(F("Entering DFU: Waited for "), DEBUG_LOG);
-    avrNotecardLog.print(DFUModeCheck, DEBUG_LOG);
+    avrNotecardLog.print(DFUModeCheck/1000, DEBUG_LOG);
     avrNotecardLog.println(F(" seconds"));
     //verify the notecard is in dfu mode using dfu.get
     req = AVRNoteNewRequest(F("dfu.get"));
@@ -397,7 +397,7 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
         avrNotecardLog.print(F(" length: "), DEBUG_LOG);
         avrNotecardLog.print(chunkSize, DEBUG_LOG);
         avrNotecardLog.print(F(" try: "), DEBUG_LOG);
-        avrNotecardLog.println(retry + 1, DEBUG_LOG);
+        avrNotecardLog.print(retry + 1, DEBUG_LOG);
         avrNotecardLog.println(F(")"), DEBUG_LOG);
         // Request the next chunk from the notecard
         J* req = AVRNoteNewRequest(F("dfu.get"));
@@ -474,8 +474,11 @@ int AVRReturnNotecardFromDFU(bool success){
   * @param success defines if update was successful
   * @return int 0 if success, 1 if error
   */
+  if(!success){
+    avrNotecardLog.println(F("Unsuccessful update"), ERROR_LOG);
+  }
   avrNotecardLog.println(F("Returning from DFU"), DEBUG_LOG);
-
+  
   J* req = AVRNoteNewRequest(F("dfu.status"));
   if(req != NULL){
     JAddBoolToObject(req, "stop", true);
