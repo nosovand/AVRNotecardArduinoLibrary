@@ -26,7 +26,7 @@ int AVRStartNotecardSync();
 int AVRIsNotecardConnected();
 long AVRCheckNotecardDFUMode(long maxUpdateSize, char* imageMD5);
 int AVRSetNotecardToDFU();
-int AVRReturnNotecardFromDFU();
+int AVRReturnNotecardFromDFU(bool success);
 
 char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize);
 void AVRNotecardCheckForUpdate();
