@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "notecard_AVR.h"
-#include "myBase64.h"
+#include "AVRNotecardUtils.hpp"
 #include "InternalStorageAVR.h"
 #include "memoryTest.h"
 // #include "debugConsole.hpp"
@@ -172,20 +172,20 @@ int AVRNotecardInit(){
     else{
       avrNotecardLog.println(F("Notecard debug stream was not activated"), DEBUG_LOG);
     }
-    J *req = notecard.newRequest("hub.set");
-    if (req != NULL) {
-      AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
-      AVRJAddStringToObject(req, "mode", F("continuous"));
-      JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
+    J * req = AVRNoteNewRequest(F("card.dfu"));
+    if (req != NULL){
+      AVRJAddStringToObject(req, "name", F("-"));
+      JAddBoolToObject(req, "off", true);
       notecard.sendRequest(req);
     }
     else{
       return memoryError();
     }
-    req = AVRNoteNewRequest(F("card.dfu"));
-    if (req != NULL){
-      AVRJAddStringToObject(req, "name", F("-"));
-      JAddBoolToObject(req, "off", true);
+    req = notecard.newRequest("hub.set");
+    if (req != NULL) {
+      AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
+      AVRJAddStringToObject(req, "mode", F("continuous"));
+      JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
       notecard.sendRequest(req);
     }
     else{
@@ -270,7 +270,7 @@ int AVRStartNotecardSync(){
   return RETURN_SUCCESS;
 }
 
-long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5) {
+long AVRCheckNotecardDFUMode(long maxUpdateSize, char* imageMD5) {
   /**
    * Checks the notecard DFU mode and returns the size of the update if one is available
    * @brief check the notecard DFU mode
@@ -468,21 +468,29 @@ char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkS
     }
 }
 
-int AVRReturnNotecardFromDFU(){
+int AVRReturnNotecardFromDFU(bool success){
   /**
   * This function returns the notecard from DFU mode to continuous operation
+  * @param success defines if update was successful
   * @return int 0 if success, 1 if error
   */
   avrNotecardLog.println(F("Returning from DFU"), DEBUG_LOG);
+
   J* req = AVRNoteNewRequest(F("dfu.status"));
   if(req != NULL){
     JAddBoolToObject(req, "stop", true);
-    AVRJAddStringToObject(req, "status", F("firmware update successful"));
+    if(success){
+      AVRJAddStringToObject(req, "status", F("firmware update successful"));
+    }else{
+      AVRJAddStringToObject(req, "status", F("firmware update unsuccessful"));
+    }
+    JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod);
     notecard.sendRequest(req);
   }
   else{
     return memoryError();
   }
+
   //return to continuous operation
   req = NoteNewRequest("hub.set");
   if(req != NULL){
@@ -512,7 +520,7 @@ void AVRNotecardCheckForUpdate(){
   //Serial.flush();
   // check if dfu mode is ready and if so, retrieve the update size
   char imageMD5[NOTE_MD5_HASH_STRING_SIZE] = {0};
-  long updateSize = AVRCheckNotecatdDFUMode(100000, imageMD5);
+  long updateSize = AVRCheckNotecardDFUMode(100000, imageMD5);
   
   // if updateSize is zero, the update is not ready
   if (!updateSize) {
@@ -529,7 +537,7 @@ void AVRNotecardCheckForUpdate(){
 
   // check if there is enough space to store the update
   if (!InternalStorage.open(updateSize)) {
-    AVRReturnNotecardFromDFU();
+    AVRReturnNotecardFromDFU(false);
     avrNotecardLog.println(F("There is not enough flash space to store the update. Can't continue with update."), ERROR_LOG);
     return;
   } 
@@ -542,9 +550,10 @@ void AVRNotecardCheckForUpdate(){
   char* payload;
   int maxNumOfErrors = 10;
   int numOfErrors = 0;
+  int currentProgress = 0;
   NoteMD5Context md5Context;
   NoteMD5Init(&md5Context);
-
+  displayLoadingBar(currentProgress, RELEASE_LOG);
   //receive update chunk by chunk and save it to flash memory
   for (offset; offset < updateSize; offset+=chunkSize)
   {  
@@ -556,7 +565,7 @@ void AVRNotecardCheckForUpdate(){
     payload = AVRRetrieveNotecardPayloadChunk(numOfErrors, offset, chunkSize);
     
     if (payload == NULL) {
-        AVRReturnNotecardFromDFU();
+        AVRReturnNotecardFromDFU(false);
         return;
     }
     // MD5 the chunk
@@ -572,11 +581,13 @@ void AVRNotecardCheckForUpdate(){
     // Move to next chunk
     avrNotecardLog.print(F("dfu: chunk successfully saved to flash, offset: "),  DEBUG_LOG);
     avrNotecardLog.println(offset, DEBUG_LOG);
+    currentProgress = offset*100/updateSize;
+    displayLoadingBar(currentProgress, RELEASE_LOG);
     //notecard.logDebugf("dfu: successfully transferred offset:%d, offset");
   }
 
   //after saving new update, stop dfu mode
-  AVRReturnNotecardFromDFU();
+  AVRReturnNotecardFromDFU(true);
 
   // Validate the MD5
   uint8_t md5Hash[NOTE_MD5_HASH_SIZE];
