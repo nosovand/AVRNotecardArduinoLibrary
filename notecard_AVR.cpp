@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "notecard_AVR.h"
-#include "myBase64.h"
+#include "AVRNotecardUtils.hpp"
 #include "InternalStorageAVR.h"
 #include "memoryTest.h"
 // #include "debugConsole.hpp"
@@ -539,9 +539,10 @@ void AVRNotecardCheckForUpdate(){
   char* payload;
   int maxNumOfErrors = 10;
   int numOfErrors = 0;
+  int currentProgress = 0;
   NoteMD5Context md5Context;
   NoteMD5Init(&md5Context);
-
+  displayLoadingBar(currentProgress, RELEASE_LOG);
   //receive update chunk by chunk and save it to flash memory
   for (offset; offset < updateSize; offset+=chunkSize)
   {  
@@ -569,6 +570,8 @@ void AVRNotecardCheckForUpdate(){
     // Move to next chunk
     avrNotecardLog.print(F("dfu: chunk successfully saved to flash, offset: "),  DEBUG_LOG);
     avrNotecardLog.println(offset, DEBUG_LOG);
+    currentProgress = offset*100/updateSize;
+    displayLoadingBar(currentProgress, RELEASE_LOG);
     //notecard.logDebugf("dfu: successfully transferred offset:%d, offset");
   }
 
