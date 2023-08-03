@@ -32,6 +32,10 @@
 #define CHUNK_SIZE_512_BYTES 512
 #define CHUNK_SIZE_1024_BYTES 1024
 
+#define INBOUND_MESSAGES_PERIOD_1_MIN 1
+#define INBOUND_MESSAGES_PERIOD_2_MIN 2
+#define INBOUND_MESSAGES_PERIOD_5_MIN 5
+#define INBOUND_MESSAGES_PERIOD_1_HOUR 60
 
 struct AVRNotecardParameters{
   uint8_t libraryMode;
@@ -42,6 +46,7 @@ struct AVRNotecardParameters{
   int gpsPeriod; 
   int dfuWait;
   int chunckSize;
+  int inboundPeriod;
 };
 
 extern AVRNotecardParameters notecardParameters;

@@ -176,7 +176,7 @@ int AVRNotecardInit(){
     if (req != NULL) {
       AVRJAddStringToObject(req, "product", NOTE_PRODUCT_UID);
       AVRJAddStringToObject(req, "mode", F("continuous"));
-      JAddNumberToObject(req, "inbound", 2); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
+      JAddNumberToObject(req, "inbound", notecardParameters.inboundPeriod); //max interval between syncs to receive messages (and updates) from notehub is 2 minutes
       notecard.sendRequest(req);
     }
     else{
@@ -504,7 +504,7 @@ void AVRNotecardCheckForUpdate(){
 
   //check if notecard is connected to network
   if(!AVRIsNotecardConnected()){
-    debugConsole.println(F("Notecard is not synced, cannot check for update"));
+    avrNotecardLog.println(F("Notecard is not synced, cannot check for update"), RELEASE_LOG);
     AVRStartNotecardSync();
     return;
   }
