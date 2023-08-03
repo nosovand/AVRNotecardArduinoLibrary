@@ -22,19 +22,20 @@ void AVRNotecardLog::print(char *message, uint8_t loggingLevel)
       case DEBUG_LOG:
           if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
           {
-              debugConsole.print(message);
+            debugConsole.print(message);
           }
           break;
       case RELEASE_LOG:
           if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
           {
-              debugConsole.print(message);
+            debugConsole.print(message);
           }
           break;
       case ERROR_LOG:
           if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
           {
-              debugConsole.print(message);
+            debugConsole.print(F("ERROR: "));
+            debugConsole.print(message);
           }
           break;
       default:
@@ -54,19 +55,20 @@ void AVRNotecardLog::println(char *message, uint8_t loggingLevel)
     case DEBUG_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case RELEASE_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case ERROR_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
         {
-            debugConsole.println(message);
+          debugConsole.print(F("ERROR: "));
+          debugConsole.println(message);
         }
         break;
     default:
@@ -85,19 +87,20 @@ void AVRNotecardLog::print(const char *message, uint8_t loggingLevel){
         case DEBUG_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
             {
-                debugConsole.print(message);
+              debugConsole.print(message);
             }
             break;
         case RELEASE_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
             {
-                debugConsole.print(message);
+              debugConsole.print(message);
             }
             break;
         case ERROR_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
             {
-                debugConsole.print(message);
+              debugConsole.print(F("ERROR: "));
+              debugConsole.print(message);
             }
             break;
         default:
@@ -117,19 +120,20 @@ void AVRNotecardLog::println(const char *message, uint8_t loggingLevel)
     case DEBUG_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case RELEASE_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case ERROR_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
         {
-            debugConsole.println(message);
+          debugConsole.print(F("ERROR: "));
+          debugConsole.println(message);
         }
         break;
     default:
@@ -148,19 +152,20 @@ void AVRNotecardLog::print(String& message, uint8_t loggingLevel){
         case DEBUG_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
             {
-                debugConsole.print(message);
+              debugConsole.print(message);
             }
             break;
         case RELEASE_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
             {
-                debugConsole.print(message);
+              debugConsole.print(message);
             }
             break;
         case ERROR_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
             {
-                debugConsole.print(message);
+              debugConsole.print(F("ERROR: "));
+              debugConsole.print(message);
             }
             break;
         default:
@@ -180,19 +185,20 @@ void AVRNotecardLog::println(String& message, uint8_t loggingLevel)
     case DEBUG_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case RELEASE_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case ERROR_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
         {
-            debugConsole.println(message);
+          debugConsole.print(F("ERROR: "));
+          debugConsole.println(message);
         }
         break;
     default:
@@ -212,19 +218,20 @@ void AVRNotecardLog::print(double message, uint8_t loggingLevel)
         case DEBUG_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
             {
-                debugConsole.print(message);
+              debugConsole.print(message);
             }
             break;
         case RELEASE_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
             {
-                debugConsole.print(message);
+              debugConsole.print(message);
             }
             break;
         case ERROR_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
             {
-                debugConsole.print(message);
+              debugConsole.print(F("ERROR: "));
+              debugConsole.print(message);
             }
             break;
         default:
@@ -244,19 +251,20 @@ void AVRNotecardLog::println(double message, uint8_t loggingLevel)
     case DEBUG_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case RELEASE_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case ERROR_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
         {
-            debugConsole.println(message);
+          debugConsole.print(F("ERROR: "));
+          debugConsole.println(message);
         }
         break;
     default:
@@ -276,19 +284,20 @@ void AVRNotecardLog::print(const __FlashStringHelper *message, uint8_t loggingLe
         case DEBUG_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
             {
-                debugConsole.print(message);
+              debugConsole.print(message);
             }
             break;
         case RELEASE_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
             {
-                debugConsole.print(message);
+              debugConsole.print(message);
             }
             break;
         case ERROR_LOG:
             if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
             {
-                debugConsole.print(message);
+              debugConsole.print(F("ERROR: "));
+              debugConsole.print(message);
             }
             break;
         default:
@@ -308,19 +317,20 @@ void AVRNotecardLog::println(const __FlashStringHelper *message, uint8_t logging
     case DEBUG_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case RELEASE_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
         {
-            debugConsole.println(message);
+          debugConsole.println(message);
         }
         break;
     case ERROR_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
         {
-            debugConsole.println(message);
+          debugConsole.print(F("ERROR: "));
+          debugConsole.println(message);
         }
         break;
     default:
@@ -340,19 +350,20 @@ void AVRNotecardLog::println(uint8_t loggingLevel)
     case DEBUG_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES)
         {
-            debugConsole.println();
+          debugConsole.println();
         }
         break;
     case RELEASE_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES)
         {
-            debugConsole.println();
+          debugConsole.println();
         }
         break;
     case ERROR_LOG:
         if (notecardLogMode == NOTECARD_LOG_EVERYTHING || notecardLogMode == NOTECARD_LOG_DEBUG_MESSSAGES || notecardLogMode == NOTECARD_LOG_RELEASE_MESSSAGES || notecardLogMode == NOTECARD_LOG_ERRORS_ONLY)
         {
-            debugConsole.println();
+          debugConsole.print(F("ERROR: "));
+          debugConsole.println();
         }
         break;
     default:
