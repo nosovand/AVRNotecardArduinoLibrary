@@ -1,5 +1,5 @@
 /*----------------------- notecard AVR header file -------------------------|
- | libabry version 0.2.0                                                    |
+ | libabry version 0.3.0                                                    |
  |                  																												|
  | 2023 by Andrey Nosov, https://github.com/nosovand                        |
  |                                                                          |
@@ -8,12 +8,10 @@
  |-------------------------------------------------------------------------*/
 
 #include <Notecard.h>
+#include "AVRNotecardLog.hpp"
 
 #define RETURN_SUCCESS 1
 #define RETURN_ERROR 0
-#define NOTE_PRODUCT_UID F("com.gmail.work.kp.an:firsttest")
-#define usbSerial Serial
-#define txRxPinsSerial Serial
 #define DEBUG_MODE true
 #define RELEASE_MODE false
 #define ALARM_A F("Alarm A")
@@ -22,16 +20,13 @@
 
 extern Notecard notecard; //test
 
-#define GPS_CONNECTION_PERIOD_SEC 60
-
-
-int AVRNotecardInit(bool debugMode);
+int AVRNotecardInit();
 int AVRInitNotecardGPS();
 int AVRStartNotecardSync();
 int AVRIsNotecardConnected();
-long AVRCheckNotecatdDFUMode(long maxUpdateSize, char* imageMD5);
-int AVRSetNotecardToDFU(int maxWaitTime_sec);
-int AVRReturnNotecardFromDFU();
+long AVRCheckNotecardDFUMode(long maxUpdateSize, char* imageMD5);
+int AVRSetNotecardToDFU();
+int AVRReturnNotecardFromDFU(bool success);
 
 char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize);
 void AVRNotecardCheckForUpdate();
@@ -41,3 +36,5 @@ N_CJSON_PUBLIC(J*) AVRJAddStringToObject(J* const object, const char* const name
 
 void moveStringToRAM(const char* source, char** destination);
 void freeRAMString(char** str);
+
+uint8_t memoryError();

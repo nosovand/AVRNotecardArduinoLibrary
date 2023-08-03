@@ -9,8 +9,8 @@ void setup() {
   debugConsole.println(F("Starting program"));
   SHOW_SIZES
   // initialize notecard library
-  AVRNotecardInit(true);
-  debugConsole.println(F("############## SOFTWARE VERSION 0.1.0 #############"));
+  AVRNotecardInit();
+  debugConsole.println(F("############## SOFTWARE VERSION 0.3.0 #############"));
 }
 
 void loop() {
