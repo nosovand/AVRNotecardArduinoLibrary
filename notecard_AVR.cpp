@@ -549,7 +549,7 @@ void AVRNotecardCheckForUpdate(){
   } 
 
   bool payloadEmpty = false;
-  int chunkSize = 256;
+  int chunkSize = notecardParameters.chunckSize;
   long offset = 0;
   char* payload;
   int maxNumOfErrors = 10;

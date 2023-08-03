@@ -9,4 +9,5 @@ AVRNotecardParameters notecardParameters{
   GPS_ON,
   GPS_CONNECTION_PERIOD_60_SEC,
   DFU_WAIT_2_MIN,
+  CHUNK_SIZE_256_BYTES,
 };

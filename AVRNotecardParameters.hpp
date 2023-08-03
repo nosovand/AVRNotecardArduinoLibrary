@@ -28,6 +28,11 @@
 
 #define DFU_WAIT_2_MIN 120
 
+#define CHUNK_SIZE_256_BYTES 256
+#define CHUNK_SIZE_512_BYTES 512
+#define CHUNK_SIZE_1024_BYTES 1024
+
+
 struct AVRNotecardParameters{
   uint8_t libraryMode;
   bool notecardDebugStream;
@@ -36,6 +41,7 @@ struct AVRNotecardParameters{
   bool gpsMode;
   int gpsPeriod; 
   int dfuWait;
+  int chunckSize;
 };
 
 extern AVRNotecardParameters notecardParameters;
