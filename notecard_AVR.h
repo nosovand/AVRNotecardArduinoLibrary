@@ -1,5 +1,5 @@
 /*----------------------- notecard AVR header file -------------------------|
- | libabry version 0.3.0                                                    |
+ | libabry version 0.3.1                                                    |
  |                  																												|
  | 2023 by Andrey Nosov, https://github.com/nosovand                        |
  |                                                                          |
