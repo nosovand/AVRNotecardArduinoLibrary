@@ -255,7 +255,7 @@ int AVRStartNotecardSync(){
      * @brief start notecard sync
      * @return int 1 if success, 0 if error
     */
-  avrNotecardLog.println(F("Starting notecard sync"), RELEASE_LOG);
+  avrNotecardLog.println(F("Starting notecard sync"), DEBUG_LOG);
   if(!noteCardIsSyncing){
       J* req = AVRNoteNewRequest(F("hub.sync"));
       if (req != NULL) {
@@ -515,7 +515,7 @@ void AVRNotecardCheckForUpdate(){
   avrNotecardLog.println(F("Checking for update"), RELEASE_LOG);
   //check if notecard is connected to network
   if(!AVRIsNotecardConnected()){
-    avrNotecardLog.println(F("Notecard is not synced, cannot check for update"), RELEASE_LOG);
+    avrNotecardLog.println(F("Notecard is not synced, waiting for connection"), RELEASE_LOG);
     AVRStartNotecardSync();
     return;
   }
