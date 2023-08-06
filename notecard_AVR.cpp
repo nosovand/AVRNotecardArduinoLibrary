@@ -627,8 +627,15 @@ uint8_t AVRNotecardSendStringMessage(const __FlashStringHelper* fileName, const 
   }
   AVRJAddStringToObject(body, stringName, string);
   JAddItemToObject(req, "body", body);
-  if(!notecard.sendRequest(req)){
-    return memoryError();
+  char* errorString = NULL;
+  J* rsp = notecard.requestAndResponse(req);
+  errorString = JGetString(rsp, "err");
+  if(notecard.responseError(rsp)){
+    avrNotecardLog.println(F("Could not send message"), ERROR_LOG);
+    avrNotecardLog.println(errorString, ERROR_LOG);
+    NoteDeleteResponse(rsp);
+    return RETURN_ERROR;
   }
+  NoteDeleteResponse(rsp);
   RETURN_SUCCESS;
 }

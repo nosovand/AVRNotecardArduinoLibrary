@@ -20,6 +20,7 @@ void loop() {
   //SHOW_SIZES
   // check for update
   if(debugConsole.available()){
+    SHOW_SIZES
     debugConsole.print("received command: ");
     debugConsole.println(debugConsole.readString());
     debugConsole.readParsedString(c, num);
@@ -27,10 +28,14 @@ void loop() {
       AVRNotecardCheckForUpdate();
     }
     else if(c == 'M' && num == 1){
+      AVRNotecardSendStringMessage(F("testFile.qo"), "myMessage", F("hello from notecard"));
+    }
+    else if(c == 'M' && num == 2){
       AVRNotecardSendStringMessage(F("testFile"), "myMessage", F("hello from notecard"));
     }
     else {
       debugConsole.println("For sending test message print '++M1'");
+      debugConsole.println("For sending unvalid test message print '++M2'");
       debugConsole.println("For checking for a new update print '++C1'");
     }
   }
