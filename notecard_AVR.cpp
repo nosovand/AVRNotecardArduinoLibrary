@@ -614,5 +614,21 @@ void AVRNotecardCheckForUpdate(){
   InternalStorage.apply(); // this doesn't return
 }
 
-
-
+uint8_t AVRNotecardSendStringMessage(const __FlashStringHelper* fileName, const char* const stringName, const __FlashStringHelper* string){
+  J* req = AVRNoteNewRequest(F("note.add"));
+  if(req == NULL){
+    return memoryError();
+  }
+  AVRJAddStringToObject(req, "file", fileName);
+  JAddBoolToObject(req, "sync", true);
+  J* body = JCreateObject();
+  if(body == NULL){
+    return memoryError();
+  }
+  AVRJAddStringToObject(body, stringName, string);
+  JAddItemToObject(req, "body", body);
+  if(!notecard.sendRequest(req)){
+    return memoryError();
+  }
+  RETURN_SUCCESS;
+}
