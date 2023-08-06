@@ -15,8 +15,15 @@
 
 #define NOTE_PRODUCT_UID F("com.gmail.work.kp.an:firsttest")
 
-#define NOTE_SERIAL Serial
-#define DEBUG_SERIAL Serial
+#define NOTE_SERIAL_0 Serial
+#define NOTE_SERIAL_1 Serial1
+#define NOTE_SERIAL_2 Serial2
+#define NOTE_SERIAL_3 Serial3
+
+#define DEBUG_SERIAL_0 Serial
+#define DEBUG_SERIAL_1 Serial1
+#define DEBUG_SERIAL_2 Serial2
+#define DEBUG_SERIAL_3 Serial3
 
 #define GPS_ON true
 #define GPS_OFF false
