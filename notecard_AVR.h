@@ -8,7 +8,7 @@
  |-------------------------------------------------------------------------*/
 
 #include <Notecard.h>
-#include "AVRNotecardLog.hpp"
+#include "AVRNotecard.hpp"
 
 #define RETURN_SUCCESS 1
 #define RETURN_ERROR 0
@@ -18,7 +18,7 @@
 #define ALARM_B F("Alarm B")
 
 
-extern Notecard notecard; //test
+extern AVRNotecard notecard; //test
 
 int AVRNotecardInit();
 int AVRInitNotecardGPS();

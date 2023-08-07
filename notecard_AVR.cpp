@@ -3,10 +3,11 @@
 #include "AVRNotecardUtils.hpp"
 #include "InternalStorageAVR.h"
 #include "memoryTest.h"
+#include "AVRNotecardLog.hpp"
 // #include "debugConsole.hpp"
 
 
-Notecard notecard;
+AVRNotecard notecard;
 
 bool noteCardIsSyncing = false;
 
@@ -164,10 +165,11 @@ int AVRNotecardInit(){
     //start notecard communication
     notecard.begin(notecardParameters.notecardSerial, 9600);
     avrNotecardLog.setMode(notecardParameters.libraryMode);
-    if(notecardParameters.notecardDebugStream && (&notecardParameters.debugSerial != &notecardParameters.notecardSerial)){
+    if(notecardParameters.notecardDebugStream){
       // Initialize the Notecard debug port
       avrNotecardLog.println(F("Notecard debug stream was activated"), DEBUG_LOG);
-      notecard.setDebugOutputStream(notecardParameters.debugSerial);
+      notecard.setDebugConsoleOutputStream(true);
+      //notecard.setDebugOutputStream(notecardParameters.debugSerial);
     }
     else{
       avrNotecardLog.println(F("Notecard debug stream was not activated"), DEBUG_LOG);
