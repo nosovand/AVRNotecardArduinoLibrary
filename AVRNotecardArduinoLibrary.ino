@@ -1,4 +1,4 @@
-#include "notecard_AVR.h"
+#include "AVRNotecard.hpp"
 #include "memoryTest.h"
 #include "debugConsole.hpp"
 
@@ -9,7 +9,7 @@ void setup() {
   debugConsole.println(F("Starting program"));
   SHOW_SIZES
   // initialize notecard library
-  AVRNotecardInit();
+  notecard.init();
   debugConsole.println(F("############## SOFTWARE VERSION 0.3.1 #############"));
 }
 
@@ -25,13 +25,13 @@ void loop() {
     debugConsole.println(debugConsole.readString());
     debugConsole.readParsedString(c, num);
     if(c == 'C' && num == 1){
-      AVRNotecardCheckForUpdate();
+      notecard.receiveUpdate();
     }
     else if(c == 'M' && num == 1){
-      AVRNotecardSendStringMessage(F("testFile.qo"), "myMessage", F("hello from notecard"));
+      notecard.sendStringMessage(F("testFile.qo"), "myMessage", F("hello from notecard"));
     }
     else if(c == 'M' && num == 2){
-      AVRNotecardSendStringMessage(F("testFile"), "myMessage", F("hello from notecard"));
+      notecard.sendStringMessage(F("testFile"), "myMessage", F("hello from notecard"));
     }
     else {
       debugConsole.println("For sending test message print '++M1'");
