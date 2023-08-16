@@ -8,7 +8,6 @@
  |-------------------------------------------------------------------------*/
 
 #include <Notecard.h>
-#include "AVRNotecard.hpp"
 
 #define RETURN_SUCCESS 1
 #define RETURN_ERROR 0
@@ -18,7 +17,7 @@
 #define ALARM_B F("Alarm B")
 
 
-extern AVRNotecard notecard; //test
+extern Notecard avrNotecard; //test
 
 int AVRNotecardInit();
 int AVRInitNotecardGPS();
@@ -27,6 +26,8 @@ int AVRIsNotecardConnected();
 long AVRCheckNotecardDFUMode(long maxUpdateSize, char* imageMD5);
 int AVRSetNotecardToDFU();
 int AVRReturnNotecardFromDFU(bool success);
+void AVREnableNotecardDebugStream();
+void AVRDisableNotecardDebugStream();
 
 char* AVRRetrieveNotecardPayloadChunk(int& numOfErrors, long offset, int& chunkSize);
 void AVRNotecardCheckForUpdate();
